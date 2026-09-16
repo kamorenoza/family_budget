@@ -1,0 +1,214 @@
+/* Pestañas Normal / Bolsillo */
+.expense-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  padding: 4px;
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-md);
+}
+
+.expense-tab {
+  flex: 1;
+  padding: var(--space-xs) var(--space-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.expense-tab--active {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.expense-tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Dropdown de categoría */
+.expense-select {
+  position: relative;
+}
+
+.expense-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 6px var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.expense-select__trigger:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 12%, #fff);
+}
+
+.expense-select__value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.expense-select__placeholder {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+}
+
+.expense-select__chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.expense-select__chevron--open {
+  transform: rotate(180deg);
+}
+
+.expense-select__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.expense-select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.expense-select__option:hover {
+  background: var(--color-surface-hover);
+}
+
+.expense-select__option--active {
+  background: var(--color-surface-hover);
+  font-weight: var(--font-weight-medium);
+}
+
+.expense-cat__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.expense-cat__name {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.expense-hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Paleta de color para el bolsillo */
+.expense-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* Muestra el color actual en el disparador del menú */
+.expense-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.expense-color {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.expense-color:hover {
+  transform: scale(1.1);
+}
+
+.expense-color--active {
+  border-color: var(--color-text-primary);
+}
+
+/* Paleta de iconos para el bolsillo */
+.expense-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.expense-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.expense-icon:hover {
+  transform: scale(1.08);
+}
+
+/* Persona con "disponible" debajo del nombre */
+.expense-person {
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+  text-align: left;
+}
+
+.expense-person__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.expense-person__avail {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}

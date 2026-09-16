@@ -1,0 +1,312 @@
+.income-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Paso Personal / Familiar (toggle) */
+.scope-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.scope-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.scope-toggle__slider {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.scope-toggle__slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  transition: transform var(--transition-fast);
+}
+
+.scope-toggle input:checked + .scope-toggle__slider {
+  background: var(--color-paid);
+}
+
+.scope-toggle input:checked + .scope-toggle__slider::before {
+  transform: translateX(18px);
+}
+
+.scope-toggle__text {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.scope-toggle__text--familiar {
+  color: var(--color-paid);
+  font-weight: var(--font-weight-medium);
+}
+
+.income-drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.income-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.income-field__label {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.income-field__input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.income-field__input:focus {
+  outline: none;
+}
+
+/* Evita el fondo azul que el navegador aplica al autocompletar. */
+.income-drawer input:-webkit-autofill,
+.income-drawer input:-webkit-autofill:hover,
+.income-drawer input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px color-mix(in srgb, var(--color-text-muted) 7%, #fff) inset;
+  box-shadow: 0 0 0 1000px color-mix(in srgb, var(--color-text-muted) 7%, #fff) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Selector de mes con apariencia de input dentro del formulario */
+.income-field .month-selector {
+  display: flex;
+  align-self: stretch;
+}
+
+.income-field .month-selector__trigger {
+  width: 100%;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+}
+
+.income-field .month-selector__trigger:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+}
+
+.income-field .month-selector__label {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
+}
+
+.income-field__prefixed {
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+  padding-left: var(--space-md);
+}
+
+.income-field__prefixed:focus-within {
+  border: none;
+}
+
+.income-field__prefix {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+}
+
+.income-field__input--prefixed {
+  border: none;
+  background: transparent;
+  padding-left: var(--space-xs);
+}
+
+.income-field__input--prefixed:focus {
+  border: none;
+}
+
+/* Switch estilo toggle */
+.income-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.income-switch__text {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.income-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.income-switch__slider {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.income-switch__slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  transition: transform var(--transition-fast);
+}
+
+.income-switch input:checked + .income-switch__slider {
+  background: var(--color-paid);
+}
+
+.income-switch input:checked + .income-switch__slider::before {
+  transform: translateX(18px);
+}
+
+/* Tarjetas de personas */
+.income-people {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.income-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid #e2e2e6;
+  border-radius: var(--radius-md);
+  background: #f0f0f2;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.income-person__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  color: #ffffff;
+  font-weight: var(--font-weight-semibold);
+  flex-shrink: 0;
+}
+
+.income-person__name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.income-drawer__error {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-danger);
+}
+
+/* Botón azul oscuro compacto */
+.income-drawer__submit {
+  margin-top: var(--space-xs);
+  align-self: center;
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-dark);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.income-drawer__submit:hover {
+  background: var(--color-primary);
+}
+
+.income-drawer__submit:disabled {
+  background: var(--color-border);
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+/* Fila de acciones cancelar / guardar */
+.income-drawer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.income-drawer__actions .income-drawer__submit {
+  margin-top: 0;
+}
+
+/* Label eliminar */
+.income-drawer__delete {
+  align-self: center;
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-danger);
+  cursor: pointer;
+}
+
+.income-drawer__delete:hover {
+  text-decoration: underline;
+}

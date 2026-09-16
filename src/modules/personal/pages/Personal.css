@@ -1,0 +1,213 @@
+.personal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ===== Encabezado ===== */
+.personal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.personal__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+}
+
+/* ===== Card resumen ===== */
+.card.personal-summary {
+  background: color-mix(in srgb, var(--color-text-muted) 10%, #fff);
+}
+
+.personal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.personal-summary__top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.personal-summary__label {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  line-height: 0.9rem;
+}
+
+.personal-summary__value {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-paid);
+  line-height: 1.4rem;
+}
+
+.personal-summary__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.personal-summary__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.personal-summary__item-label {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  line-height: 0.8rem;
+}
+
+.personal-summary__item-value {
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.personal-summary__item-value--rojo {
+  color: var(--color-danger);
+}
+
+/* La columna lateral y la búsqueda solo aplican en desktop */
+.personal__side {
+  display: contents;
+}
+
+.personal__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.personal__scroll .tx-search {
+  display: none;
+}
+
+/* ===== iPad / desktop: dos columnas ===== */
+@media (min-width: 960px) {
+  .app__main:has(.personal) {
+    max-width: none;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .personal {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'header header'
+      'side scroll';
+    column-gap: var(--space-lg);
+    row-gap: 40px;
+  }
+
+  .personal__header {
+    grid-area: header;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .personal__side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    min-height: 0;
+  }
+
+  .personal__scroll {
+    grid-area: scroll;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  /* Todos los valores a la izquierda, mismo tamaño y separación que Disponible */
+  .personal-summary {
+    gap: var(--space-md);
+  }
+
+  .personal-summary__top,
+  .personal-summary__item {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .personal-summary__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .personal-summary__item-value {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.4rem;
+  }
+
+  /* Barra de búsqueda arriba de la columna de ingresos/gastos */
+  .personal__scroll .tx-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-width: 220px;
+    padding: 6px var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+  }
+
+  .personal__scroll .tx-search__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+  }
+
+  .personal__scroll .tx-search__input:focus {
+    outline: none;
+  }
+
+  .personal__scroll .tx-search__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  /* La búsqueda del menú de filtros se oculta porque ya está arriba */
+  .personal__scroll .tx-filter__search {
+    display: none;
+  }
+}

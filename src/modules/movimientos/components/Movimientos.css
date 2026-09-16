@@ -1,0 +1,863 @@
+/* ===== Layout de la vista ===== */
+.app:has(.movimientos) {
+  height: 100dvh;
+  overflow: hidden;
+}.app__main:has(.movimientos) {
+  height: 100%;
+  max-width: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.movimientos {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* En el detalle de cuenta ocultamos las acciones superiores (categorías/config). */
+.app:has(.acc-detail) .top-actions {
+  display: none;
+}
+
+.acc-list,
+.acc-detail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Lista de cuentas ===== */
+.acc-list {
+  gap: var(--space-md);
+}
+
+.acc-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.acc-list__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.acc-list__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 767px) {
+  .acc-list__toolbar {
+    justify-content: space-between;
+  }
+}
+
+.acc-list__toolbar .acc-filter {
+  flex: 1;
+  min-width: 0;
+}
+
+.acc-list__toolbar .acc-filter--list {
+  flex: 0 0 auto;
+}
+
+/* Grupo filtro + agregar. Junto al toggle; en desktop se alinea a la derecha del mismo row. */
+.acc-list__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-left: var(--space-sm);
+}
+
+@media (min-width: 768px) {
+  .acc-list__actions {
+    margin-left: auto;
+  }
+}
+
+/* Toggle Personales / Familiares: a la izquierda; filtro y agregar quedan pegados a su derecha. */
+.acc-scope {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--color-surface-hover);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.acc-scope__tab {
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 3px 16px;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.acc-scope__tab--on {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Botón agregar: fondo claro, color fuerte. Cuadrado en mobile, con label en tablet+. */
+.acc-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.acc-add:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+.acc-add__label {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .acc-add {
+    width: auto;
+    padding: 0 16px;
+  }
+  .acc-add__label {
+    display: inline;
+  }
+}
+
+.acc-list__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  align-content: start;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 70px;
+      margin-right: -16px;
+    padding-right: 16px;
+}
+
+@media (min-width: 700px) {
+  .acc-list__grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    align-items: stretch;
+  }
+
+  /* Todas las cuentas con la misma altura (la de TC es la más alta). */
+  .acc-list__grid .acc-card {
+    min-height: 210px;
+  }
+}
+
+.acc-list__empty {
+  margin-top: var(--space-lg);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* ===== Tarjeta de cuenta ===== */
+.acc-card {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.acc-card--savings {
+  background: #e8f3f2;
+}
+
+.acc-card--credit {
+  background: #f4ede7;
+}
+
+.acc-card__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.acc-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.acc-card--savings .acc-card__icon {
+  background: #62aeaa;
+}
+
+.acc-card--credit .acc-card__icon {
+  background: #b78660;
+}
+
+.acc-card__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.acc-card__name {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acc-card__type {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.acc-card__menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.acc-card__dots {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acc-card__dots:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.acc-card__menu-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px;
+  min-width: 130px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.acc-card__menu-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.acc-card__menu-list svg {
+  flex-shrink: 0;
+}
+
+.acc-card__menu-list button:hover {
+  background: var(--color-surface);
+}
+
+.acc-card__menu-danger {
+  color: var(--color-danger);
+}
+
+.acc-card__balance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acc-card__balance-label {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  padding-top: 5px;
+  line-height: 0.8rem;
+}
+
+.acc-card__balance-value {
+  font-size: 1.3rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3rem;
+}
+
+.acc-card--savings .acc-card__balance-value {
+  color: #62aeaa;
+}
+
+.acc-card--credit .acc-card__balance-value {
+  color: #b78660;
+}
+
+.acc-card__grid {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.acc-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acc-card__stat-label {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  line-height: 0.8rem;
+  padding-top: 9px;
+}
+
+.acc-card__stat-value {
+  font-weight: var(--font-weight-semibold);
+  line-height: 1rem;
+}
+
+.acc-card__footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+  padding-top: var(--space-sm);
+}
+
+/* ===== Filtro (lista y movimientos) ===== */
+.acc-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.acc-filter__search {
+  flex: 1;
+}
+
+/* Acerca los movimientos al buscador (reduce el gap de la columna). */
+.acc-detail__col--right .acc-filter {
+  margin-bottom: calc(-1 * var(--space-md));
+}
+
+/* La búsqueda de Presupuesto se oculta en móvil; en el detalle la mantenemos
+   visible con su contorno pill, pero sin el borde interno del input. */
+.acc-filter__search.tx-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: 6px var(--space-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-text-secondary);
+}
+
+.acc-filter__search .tx-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.acc-filter__search .tx-search__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.acc-filter__menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.acc-filter__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.acc-filter__btn:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+.acc-filter__btn--active {
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+.acc-filter__btn-label {
+  display: none;
+}
+
+/* iPad / desktop: el botón de filtros muestra label. */
+@media (min-width: 768px) {
+  .acc-filter__btn {
+    width: auto;
+    gap: 6px;
+    padding: 0 14px;
+  }
+  .acc-filter__btn-label {
+    display: inline;
+    font-size: 0.82rem;
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.acc-filter__menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 30;
+  margin-top: 6px;
+  width: min(260px, calc(100vw - 32px));
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.acc-filter__label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.acc-filter__select {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239e9eb0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color: var(--color-text-primary);
+  padding: 9px 34px 9px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.acc-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.acc-filter__chip {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.acc-filter__chip--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.acc-filter__clear {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 0;
+}
+
+/* ===== Detalle ===== */
+.acc-detail__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.acc-detail__back,
+.acc-detail__edit {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acc-detail__back {
+  color: var(--color-text-primary);
+}
+
+.acc-detail__back:hover,
+.acc-detail__edit:hover {
+  background: transparent;
+}
+
+.acc-detail__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acc-detail__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-bottom: 70px;
+}
+
+.acc-detail__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* iPad / desktop: cuenta + histórico (40%) a la izquierda, movimientos a la derecha. */
+@media (min-width: 768px) {
+  .acc-detail__scroll {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-xl);
+  }
+  .acc-detail__col--left {
+    flex: 0 0 40%;
+    max-width: 40%;
+    position: sticky;
+    top: 0;
+  }
+  .acc-detail__col--right {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.acc-detail__card .acc-card {
+  cursor: default;
+}
+
+.acc-detail__card .acc-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Histórico ===== */
+.acc-history__title {
+  margin: 0 0 var(--space-sm);
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 767px) {
+  .acc-history {
+    display: none;
+  }
+}
+
+.acc-history__table {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.acc-history__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.acc-history__row:last-child {
+  border-bottom: none;
+}
+
+.acc-history__row--head {
+  background: #ffffff;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.acc-history__in {
+  color: var(--color-paid);
+}
+
+.acc-history__out {
+  color: var(--color-danger);
+}
+
+/* ===== Movimientos ===== */
+.acc-detail__movhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.acc-detail__movtitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.mov-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.mov-section__title {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.mov-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.mov-group {
+  border-left: 3px solid transparent;
+  padding-left: var(--space-sm);
+}
+
+/* Sin agrupar: sin barra ni sangría izquierda. */
+.mov-group--flat {
+  border-left: none;
+  padding-left: 0;
+}
+
+.mov-group__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.mov-group__chevron {
+  transition: transform var(--transition-fast);
+  color: var(--color-text-secondary);
+}
+
+.mov-group__chevron--open {
+  transform: rotate(90deg);
+}
+
+.mov-group__label {
+  flex: 1;
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.9rem;
+}
+
+.mov-group__total {
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.mov-group__total--in {
+  color: var(--color-paid);
+}
+
+.mov-group__total--out {
+  color: var(--color-danger);
+}
+
+.mov-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* ===== Item de movimiento ===== */
+.mov-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 10%, #fff);
+  padding: 10px var(--space-md);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.mov-item:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 16%, #fff);
+}
+
+.mov-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.mov-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mov-item__desc {
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mov-item__meta {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mov-item__value {
+  font-weight: var(--font-weight-semibold);
+  flex-shrink: 0;
+}
+
+.mov-item__value--in {
+  color: var(--color-paid);
+}
+
+.mov-item__value--out {
+  color: var(--color-danger);
+}
+
+.mov-item__chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ===== Drawer: filas y ajustes ===== */
+.acc-drawer__row {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.acc-drawer__row .income-field {
+  flex: 1;
+}
+
+/* Toggle Gasto/Ingreso: el contenedor se tiñe; el cuadro activo queda blanco. */
+.acc-movtabs--gasto {
+  background: #fdeaea;
+}
+
+.acc-movtabs--ingreso {
+  background: color-mix(in srgb, var(--color-paid) 16%, transparent);
+}
+
+.acc-movtabs .expense-tab--active {
+  background: #ffffff;
+}

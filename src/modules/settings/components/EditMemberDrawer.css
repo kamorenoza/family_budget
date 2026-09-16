@@ -1,0 +1,118 @@
+.edit-member__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.edit-member__preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
+}
+
+.edit-member__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  font-size: 2rem;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.edit-member__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-member__readonly-name {
+  text-align: center;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.edit-member__readonly-email {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+}
+
+.edit-member__photo-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.edit-member__label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.edit-member__input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+}
+
+.edit-member__input:focus {
+  outline: none;
+}
+
+.edit-member__colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.edit-member__color {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.edit-member__color--active {
+  border-color: var(--color-text-primary);
+  transform: scale(1.1);
+}
+
+.edit-member__submit {
+  margin-top: var(--space-md);
+}
+
+.edit-member__unlink {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-danger);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}
+
+.edit-member__change {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+}

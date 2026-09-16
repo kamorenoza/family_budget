@@ -1,0 +1,113 @@
+.top-actions {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-actions__btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 14px;
+  background: color-mix(in srgb, #2d7797 14%, #fff);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.top-actions__btn:hover {
+  background: color-mix(in srgb, #2d7797 22%, #fff);
+}
+
+/* El botón de categorías es morado en todos los breakpoints */
+.top-actions__btn--categories {
+  background: color-mix(in srgb, #8e7cc3 14%, #fff);
+}
+
+.top-actions__btn--categories:hover {
+  background: color-mix(in srgb, #8e7cc3 22%, #fff);
+}
+
+/* Estado activo (estamos en configuración). */
+.top-actions__btn--active {
+  background: color-mix(in srgb, var(--color-primary) 26%, #fff);
+}
+
+/* En configuración: en mobile se oculta (se usa el back); en desktop se mantiene. */
+.app--config .top-actions {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .app--config .top-actions {
+    display: flex;
+  }
+  .app--config .top-actions__btn--categories {
+    display: none;
+  }
+}
+
+.top-actions__label {
+  display: none;
+}
+
+.top-actions__settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.top-actions__settings-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.top-actions__settings-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 960px) {
+  .top-actions {
+    top: 10px;
+    right: 16px;
+  }
+
+  .top-actions__btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+  }
+}
+
+/* iPad / desktop: fondo azul claro y etiqueta en categorías */
+@media (min-width: 960px) {
+  .top-actions__btn {
+    background: color-mix(in srgb, var(--color-primary) 22%, #fff);
+    box-shadow: none;
+  }
+
+  .top-actions__btn--categories {
+    width: auto;
+    gap: var(--space-xs);
+    padding: 0 14px;
+    background: color-mix(in srgb, #8e7cc3 22%, #fff);
+  }
+
+  .top-actions__label {
+    display: inline;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: #8e7cc3;
+  }
+}
