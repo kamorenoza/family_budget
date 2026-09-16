@@ -1,0 +1,90 @@
+:root {
+  /* ===== Fonts ===== */
+  --font-family: "Poppins", system-ui, -apple-system, sans-serif;
+
+  --font-size-xs: 0.65rem;   /* ~8.4px */
+  --font-size-sm: 0.8rem;  /* ~9.8px */
+  --font-size-base: 0.8rem;   /* ~11.2px */
+  --font-size-lg: 0.7875rem;  /* ~12.6px */
+  --font-size-xl: 0.875rem;   /* 14px */
+  --font-size-2xl: 1.05rem;   /* ~16.8px */
+  --font-size-3xl: 1.225rem;  /* ~19.6px */
+  --font-size-4xl: 1.4rem;    /* ~22.4px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 400;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+
+  /* ===== Colors - Primary (teal) ===== */
+  --color-primary: #2d7797;
+  --color-primary-soft: #96b9c9;
+  --color-primary-light: #eaf1f4;
+  --color-primary-dark: #235f79;
+
+  /* ===== Colors - Secondary (verde azulado) ===== */
+  --color-secondary: #6faeaa;
+  --color-secondary-light: #e8f3f2;
+  --color-secondary-dark: #4c8a86;
+
+  /* ===== Colors - Accents / estados ===== */
+  --color-warning: #f0a05e;
+  --color-warning-light: #fef3e8;
+  --color-danger: #d95c5c;
+  --color-danger-light: #fde8e8;
+  --color-info: #7f96cc;
+  --color-info-light: #eef2fb;
+
+  /* Pagado (verde del proyecto de referencia) */
+  --color-paid: #6aa66c;
+  --color-paid-light: #eafbea;
+
+  /* ===== Colors - Neutrals ===== */
+  --color-bg: #ffffff;
+  --color-surface: #f4f8fd;
+  --color-surface-hover: #e9f1fb;
+  --color-border: #d9d9e0;
+
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #6b6b80;
+  --color-text-muted: #9e9eb0;
+  --color-text: var(--color-text-primary);
+
+  /* ===== Shadows ===== */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+
+  /* ===== Border Radius ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 60px;
+
+  /* ===== Spacing ===== */
+  --space-xs: 0.25rem;  /* 4px */
+  --space-sm: 0.5rem;   /* 8px */
+  --space-md: 1rem;     /* 16px */
+  --space-lg: 1.5rem;   /* 24px */
+  --space-xl: 2rem;     /* 32px */
+  --space-2xl: 3rem;    /* 48px */
+
+  /* ===== Layout ===== */
+  --max-width: 960px;
+  --nav-height: 70px;
+  --page-padding: var(--space-md);
+
+  /* ===== Transitions ===== */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  :root {
+    --font-size-3xl: 1.4rem;
+    --font-size-4xl: 1.75rem;
+    --page-padding: var(--space-2xl);
+  }
+}

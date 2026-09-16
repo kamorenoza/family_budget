@@ -1,0 +1,10 @@
+/* ==========================================================================
+   family_budget - Design system
+   Estilos base tomados de my-planner-main y my-finance-app-main.
+   Importa este archivo una sola vez (ya se hace desde src/index.css).
+   ========================================================================== */
+@import "./fonts.css";
+@import "./variables.css";
+@import "./buttons.css";
+@import "./cards.css";
+@import "./forms.css";
