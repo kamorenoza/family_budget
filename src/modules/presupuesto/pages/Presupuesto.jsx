@@ -7,7 +7,8 @@ import ExpenseDrawer from '../components/ExpenseDrawer.jsx'
 import IncomeDeleteDialog from '../components/IncomeDeleteDialog.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import { useAuth } from '../../../shared/context/AuthContext.jsx'
-import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
+import { useFamilyPrefs } from '../../../shared/hooks/useFamilyPrefs'
+import { useDragOrder } from '../../../shared/hooks/useDragOrder'
 import { useMembers } from '../../settings/useMembers'
 import { useIncomes } from '../useIncomes'
 import { useExpenses } from '../useExpenses'
@@ -37,9 +38,11 @@ export default function Presupuesto() {
   const [editingExpense, setEditingExpense] = useState(null)
   const [expenseDeleteOpen, setExpenseDeleteOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
-  const { prefs, setPref } = useUserPrefs()
+  // Preferencias de orden compartidas por la familia (iguales para ambos miembros).
+  const { prefs, setPref } = useFamilyPrefs()
   const expenseSort = prefs.budgetExpenseSort ?? 'fecha'
   const setExpenseSort = (v) => setPref('budgetExpenseSort', v)
+  const [reorderMode, setReorderMode] = useState(false)
   const [expenseQuery, setExpenseQuery] = useState('')
   const filterRef = useRef(null)
   const now = new Date()
@@ -97,13 +100,28 @@ export default function Presupuesto() {
 
   // Orden del listado según el filtro seleccionado.
   const sortedExpenses = [...visibleExpenses.filter((e) => e.scope !== 'personal')].sort((a, b) => {
+    if (expenseSort === 'manual') {
+      const ord = prefs.budgetExpenseOrder || []
+      const ia = ord.indexOf(a.id)
+      const ib = ord.indexOf(b.id)
+      const na = ia === -1 ? Infinity : ia
+      const nb = ib === -1 ? Infinity : ib
+      if (na !== nb) return na - nb
+      return String(a.date).localeCompare(String(b.date))
+    }
     if (expenseSort === 'categoria') {
       return (categoryOf(a.categoryId)?.name || '').localeCompare(categoryOf(b.categoryId)?.name || '')
     }
     if (expenseSort === 'tipo') {
       return (a.kind === 'bolsillo' ? 0 : 1) - (b.kind === 'bolsillo' ? 0 : 1)
     }
-    return dayOfDate(a.date) - dayOfDate(b.date)
+    if (expenseSort === 'fechaDesc') {
+      const byDate = String(b.date).localeCompare(String(a.date))
+      return byDate !== 0 ? byDate : (b.createdAt || 0) - (a.createdAt || 0)
+    }
+    // 'fecha': ascendente, del primero al último agregado.
+    const byDate = String(a.date).localeCompare(String(b.date))
+    return byDate !== 0 ? byDate : (a.createdAt || 0) - (b.createdAt || 0)
   })
 
   // Búsqueda por nombre o valor del gasto.
@@ -116,6 +134,33 @@ export default function Presupuesto() {
           (queryDigits && String(Math.round(Number(e.amount) || 0)).includes(queryDigits)),
       )
     : sortedExpenses
+
+  // Elementos de primer nivel (los gastos de un bolsillo se muestran dentro de su accordion).
+  const topLevelExpenses = filteredExpenses.filter((e) => !(e.sourceType === 'bolsillo' && e.bolsilloId))
+  const expenseById = new Map(topLevelExpenses.map((e) => [e.id, e]))
+
+  // Guarda el orden manual (compartido con la familia) cuando se arrastra.
+  const saveExpenseOrder = (visibleIds) => {
+    const prev = prefs.budgetExpenseOrder || []
+    const seen = new Set(visibleIds)
+    setPref('budgetExpenseOrder', [...visibleIds, ...prev.filter((id) => !seen.has(id))])
+  }
+  const { order: dragOrder, dragPropsFor } = useDragOrder(
+    topLevelExpenses.map((e) => e.id),
+    saveExpenseOrder,
+  )
+  const renderExpenses = reorderMode
+    ? dragOrder.map((id) => expenseById.get(id)).filter(Boolean)
+    : topLevelExpenses
+
+  // Activa/desactiva el modo reordenar. Al activarlo, fija el orden manual.
+  const toggleReorder = () => {
+    setReorderMode((on) => {
+      const next = !on
+      if (next && expenseSort !== 'manual') setExpenseSort('manual')
+      return next
+    })
+  }
 
   // Bolsillos del mes y cuánto se ha consumido de cada uno (gastos con origen bolsillo).
   const bolsillos = visibleExpenses.filter((e) => e.kind === 'bolsillo')
@@ -469,13 +514,32 @@ export default function Presupuesto() {
                         setFilterOpen(false)
                       }}
                     >
+                      <option value="fecha">Fecha (más antiguo)</option>
+                      <option value="fechaDesc">Fecha (más reciente)</option>
                       <option value="categoria">Categoría</option>
-                      <option value="fecha">Fecha</option>
                       <option value="tipo">Tipo (bolsillo o normal)</option>
+                      <option value="manual">Personalizado</option>
                     </select>
                   </div>
                 )}
               </div>
+              {topLevelExpenses.length > 1 && (
+                <button
+                  type="button"
+                  className={`tx-reorder${reorderMode ? ' tx-reorder--on' : ''}`}
+                  onClick={toggleReorder}
+                  aria-label={reorderMode ? 'Listo' : 'Reordenar'}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {reorderMode ? (
+                      <path d="M5 12l5 5L20 7" />
+                    ) : (
+                      <path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3" />
+                    )}
+                  </svg>
+                  <span className="tx-reorder__label">{reorderMode ? 'Listo' : 'Reordenar'}</span>
+                </button>
+              )}
               <button
                 type="button"
                 className="tx-section__add tx-section__add--gasto"
@@ -492,12 +556,10 @@ export default function Presupuesto() {
           <div className="tx-list">
             {sortedExpenses.length === 0 ? (
               <p className="tx-empty">Sin gastos este mes</p>
-            ) : filteredExpenses.length === 0 ? (
+            ) : topLevelExpenses.length === 0 ? (
               <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
             ) : (
-              filteredExpenses.map((tx) => {
-                // Los gastos que salen de un bolsillo se muestran dentro de su accordion.
-                if (tx.sourceType === 'bolsillo' && tx.bolsilloId) return null
+              renderExpenses.map((tx) => {
                 if (tx.kind === 'bolsillo') {
                   const childExpenses = visibleExpenses.filter(
                     (e) => e.sourceType === 'bolsillo' && e.bolsilloId === tx.id,
@@ -517,6 +579,8 @@ export default function Presupuesto() {
                       dateLabelOf={(c) => fullDateLabel(dayOfDate(c.date), period.month, period.year)}
                       onToggle={handleTogglePaid}
                       onEdit={openEditExpense}
+                      dragMode={reorderMode}
+                      dragProps={reorderMode ? dragPropsFor(tx.id) : null}
                     />
                   )
                 }
@@ -533,6 +597,8 @@ export default function Presupuesto() {
                     dateLabel={fullDateLabel(dayOfDate(tx.date), period.month, period.year)}
                     onToggle={handleTogglePaid}
                     onEdit={openEditExpense}
+                    dragMode={reorderMode}
+                    dragProps={reorderMode ? dragPropsFor(tx.id) : null}
                   />
                 )
               })

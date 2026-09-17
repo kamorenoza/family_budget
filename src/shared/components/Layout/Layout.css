@@ -16,9 +16,8 @@
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--page-padding);
-  padding-top: calc(
-    env(safe-area-inset-top) + var(--page-padding) + var(--space-md)
-  );
+  /* Baja el contenido para separarlo de la barra de estado del iPhone. */
+  padding-top: calc(env(safe-area-inset-top) + var(--page-padding) + var(--space-md));
 }
 
 /* iPad / desktop: menos padding en el contenedor */
@@ -41,7 +40,7 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
-  height: calc(90px + env(safe-area-inset-bottom));
+  height: calc(60px + env(safe-area-inset-bottom));
   padding-left: 7px;
   padding-right: 7px;
   padding-bottom: env(safe-area-inset-bottom);
@@ -49,7 +48,7 @@
 }
 
 .bottom-menu::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;

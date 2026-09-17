@@ -18,6 +18,11 @@ export function updateFamily(familyId, patch) {
   return setDoc(familyRef(familyId), patch, { merge: true })
 }
 
+// Preferencias compartidas por la familia (orden/agrupación); iguales para ambos miembros.
+export function setFamilyPrefs(familyId, patch) {
+  return setDoc(familyRef(familyId), { prefs: patch }, { merge: true })
+}
+
 // Crea una familia con id neutral y devuelve su id (co-propiedad vía ownerEmails).
 export async function createFamily(ownerEmail, members = []) {
   const ref = doc(collection(db, FAMILIES))

@@ -21,6 +21,8 @@ export function useIncomes() {
     (data) => {
       if (!familyId) return 'Espera un momento e intenta de nuevo.'
       const { received, monthKey, ...base } = data
+      // Marca de tiempo de creación para ordenar por fecha (desempata mismo día).
+      base.createdAt = Date.now()
       if (data.fixed) {
         // Fijo: se muestra desde `startMonth` y se marca recibido mes a mes.
         addIncomeDoc(familyId, {

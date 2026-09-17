@@ -5,6 +5,7 @@ import { formatCurrency } from '../../presupuesto/presupuesto.utils'
 import { EXPENSE_GROUP_BY, EXPENSE_ORDER_BY } from '../accounts.constants'
 import { last6MonthsHistory, monthGroupLabel } from '../accounts.utils'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
+import { useFamilyPrefs } from '../../../shared/hooks/useFamilyPrefs'
 
 // Menú de búsqueda + agrupar/ordenar de los movimientos.
 function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, onClear, defaultGroup }) {
@@ -193,8 +194,12 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
   const canPend = isNormal && !!account.allowPending
   const defaultGroup = isNormal ? 'category' : 'none'
   const [query, setQuery] = useState('')
-  const { prefs, setPref } = useUserPrefs()
-  // Preferencias por cuenta (personales del usuario).
+  const userPrefs = useUserPrefs()
+  const familyPrefs = useFamilyPrefs()
+  // Cuentas familiares: preferencia compartida entre miembros. Personales: propia del usuario.
+  const isFamilyAccount = account.scope !== 'personal'
+  const { prefs, setPref } = isFamilyAccount ? familyPrefs : userPrefs
+  // Preferencias por cuenta.
   const groupKey = `movGroupBy_${account.id}`
   const orderKey = `movOrderBy_${account.id}`
   const groupBy = prefs[groupKey] ?? defaultGroup

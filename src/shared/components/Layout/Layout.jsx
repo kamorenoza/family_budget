@@ -5,6 +5,8 @@ import BudgetIcon from '../icons/BudgetIcon.jsx'
 import ExpenseHandIcon from '../icons/ExpenseHandIcon.jsx'
 import ShoppingIcon from '../icons/ShoppingIcon.jsx'
 import TopActions from '../TopActions/TopActions.jsx'
+import Loader from '../Loader/Loader.jsx'
+import { useFamily } from '../../context/FamilyContext.jsx'
 import './Layout.css'
 
 const COLOR_PRIMARY = '#2d7797'
@@ -23,6 +25,13 @@ const navItems = [
 export default function Layout() {
   const location = useLocation()
   const onConfig = location.pathname.startsWith('/configuracion')
+  const { loading: familyLoading } = useFamily()
+
+  // Mientras se resuelve la familia (y llegan los datos), muestra el loader
+  // en vez del app-shell vacío.
+  if (familyLoading) {
+    return <Loader message="Preparando tu presupuesto…" />
+  }
 
   return (
     <div className={`app ${onConfig ? 'app--config' : ''}`}>

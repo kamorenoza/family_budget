@@ -21,6 +21,8 @@ export function useExpenses() {
     (data) => {
       if (!familyId) return 'Espera un momento e intenta de nuevo.'
       const { paid, monthKey, repeatMonths, ...base } = data
+      // Marca de tiempo de creación para ordenar por fecha (desempata mismo día).
+      base.createdAt = Date.now()
       if (data.fixed) {
         // Fijo: se muestra desde `startMonth`; si hay repetición, se corta en `endMonth`.
         const doc = { ...base, startMonth: monthKey, paidMonths: paid ? { [monthKey]: true } : {} }

@@ -53,9 +53,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-right: 15px;
-  padding-bottom: 50px;
-  margin-right: -15px;
+      padding-right: 15px;
+    padding-bottom: 50px;
+    margin-right: -15px;
 }
 
 /* ===== Encabezado ===== */
@@ -346,6 +346,69 @@
     font-size: 0.82rem;
     font-weight: var(--font-weight-medium);
   }
+}
+
+/* Botón "Reordenar" (arrastrar gastos). */
+.tx-reorder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.tx-reorder:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+.tx-reorder--on {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.tx-reorder__label {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .tx-reorder {
+    width: auto;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .tx-reorder__label {
+    display: inline;
+    font-size: 0.82rem;
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+/* Asa de arrastre visible solo en modo reordenar. */
+.tx-item--drag {
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.tx-item__drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  align-self: stretch;
+  margin-right: 2px;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.tx-item__drag:active {
+  cursor: grabbing;
 }
 
 .tx-filter__menu {
@@ -896,8 +959,8 @@
     grid-template-columns: minmax(0, 400px) 1fr;
     grid-template-rows: auto 1fr;
     grid-template-areas:
-      "header header"
-      "side scroll";
+      'header header'
+      'side scroll';
     column-gap: var(--space-lg);
     row-gap: 40px;
   }

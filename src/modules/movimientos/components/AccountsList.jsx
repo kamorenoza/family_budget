@@ -3,10 +3,14 @@ import AccountCard from './AccountCard.jsx'
 import AccountsFilter from './AccountsFilter.jsx'
 import { accountTypeLabel } from '../accounts.constants'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
+import { useFamilyPrefs } from '../../../shared/hooks/useFamilyPrefs'
 
 export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit, onDelete, onAdd }) {
   const [query, setQuery] = useState('')
-  const { prefs, setPref } = useUserPrefs()
+  // Cuentas familiares: preferencia compartida. Personales: propia de cada usuario.
+  const userPrefs = useUserPrefs()
+  const familyPrefs = useFamilyPrefs()
+  const { prefs, setPref } = scope === 'family' ? familyPrefs : userPrefs
   const typeFilter = prefs.accTypeFilter ?? 'all'
   const sortBy = prefs.accSortBy ?? 'name'
   const setTypeFilter = (v) => setPref('accTypeFilter', v)

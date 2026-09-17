@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore'
 
 // Los valores se cargan desde variables de entorno (.env, prefijo VITE_).
 const firebaseConfig = {
@@ -16,4 +20,8 @@ const firebaseConfig = {
 export const firebaseApp = initializeApp(firebaseConfig)
 export const auth = getAuth(firebaseApp)
 export const provider = new GoogleAuthProvider()
-export const db = getFirestore(firebaseApp)
+// Persistencia offline (IndexedDB): la cola de escrituras sobrevive al cerrar
+// la PWA y se sincroniza cuando vuelve la conexión.
+export const db = initializeFirestore(firebaseApp, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+})

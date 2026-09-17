@@ -2,11 +2,23 @@ import { useState } from 'react'
 import { CategoryGlyph } from '../../categories/categories.constants'
 import { formatCurrency, monthKeyLabel } from '../presupuesto.utils'
 
-export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit }) {
+export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit, dragMode, dragProps }) {
   const repeatsUntil = tx.fixed && tx.endMonth
   return (
-    <div className={`tx-item tx-item--gasto${tx.isPaid ? ' tx-item--paid' : ''}`}>
+    <div
+      className={`tx-item tx-item--gasto${tx.isPaid ? ' tx-item--paid' : ''}${dragMode ? ' tx-item--drag' : ''}`}
+      data-drag-id={dragProps ? dragProps['data-drag-id'] : undefined}
+    >
       <div className="tx-item__row">
+        {dragMode && dragProps && (
+          <span className="tx-item__drag" {...dragProps.handleProps} aria-label="Arrastrar para reordenar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+              <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+              <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+            </svg>
+          </span>
+        )}
         <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: category?.backgroundColor || '#c4c4cc' }}>
           <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
         </span>
@@ -56,14 +68,26 @@ export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onTo
 }
 
 // Bolsillo como accordion: cabecera con progreso y, al abrir, sus gastos + editar.
-export function BolsilloAccordion({ tx, used, childExpenses, categoryOf, source, dateLabelOf, onToggle, onEdit }) {
+export function BolsilloAccordion({ tx, used, childExpenses, categoryOf, source, dateLabelOf, onToggle, onEdit, dragMode, dragProps }) {
   const [open, setOpen] = useState(false)
   const total = Number(tx.amount) || 0
   const available = total - (used || 0)
   const pct = total > 0 ? Math.min(100, Math.round(((used || 0) / total) * 100)) : 0
   return (
-    <div className={`tx-item bolsillo${open ? ' bolsillo--open' : ''}`}>
+    <div
+      className={`tx-item bolsillo${open ? ' bolsillo--open' : ''}${dragMode ? ' tx-item--drag' : ''}`}
+      data-drag-id={dragProps ? dragProps['data-drag-id'] : undefined}
+    >
       <div className="tx-item__row">
+        {dragMode && dragProps && (
+          <span className="tx-item__drag" {...dragProps.handleProps} aria-label="Arrastrar para reordenar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+              <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+              <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+            </svg>
+          </span>
+        )}
         <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: tx.color || 'var(--color-primary)' }}>
           {tx.icon ? (
             <CategoryGlyph name={tx.icon} color="#ffffff" size={20} />
