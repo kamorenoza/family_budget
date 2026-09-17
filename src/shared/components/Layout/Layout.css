@@ -167,7 +167,7 @@
 /* Deja espacio para el bottom menu en mobile */
 @media (max-width: 959px) {
   .app__main {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 110px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 60px);
   }
 }
 

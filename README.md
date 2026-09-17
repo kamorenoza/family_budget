@@ -43,7 +43,7 @@ src/
   main.jsx            # Punto de entrada + BrowserRouter
   App.jsx             # Definición de rutas
   components/
-    Layout.jsx        # Header con navegación + Outlet
+    Layout.jsx        # Header con navegación + Outlet.
   pages/
     Home.jsx
     Transactions.jsx
