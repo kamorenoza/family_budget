@@ -711,13 +711,14 @@ export default function Presupuesto() {
                     sourceOf={(e) => {
                       const mm = memberOf(e.memberEmail)
                       return mm
-                        ? { name: mm.name.split(' ')[0], color: mm.color || 'var(--color-primary)' }
+                        ? { name: mm.name.split(' ')[0], color: mm.color || 'var(--color-primary)', photo: mm.photo }
                         : null
                     }}
                     dragMode={reorderMode}
                     dragProps={reorderMode ? catDragPropsFor(catId) : null}
                     itemDragMode={reorderMode}
                     itemDragPropsFor={dragPropsFor}
+                    ownerAvatar
                   />
                 ))}
                 {groupBolsillos.map((tx) => {

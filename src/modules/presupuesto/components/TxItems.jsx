@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CategoryGlyph } from '../../categories/categories.constants'
 import { formatCurrency, monthKeyLabel } from '../presupuesto.utils'
 
-export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit, dragMode, dragProps, hideIcon }) {
+export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit, dragMode, dragProps, hideIcon, showOwnerAvatar }) {
   const repeatsUntil = tx.fixed && tx.endMonth
   return (
     <div
@@ -19,15 +19,25 @@ export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onTo
             </svg>
           </span>
         )}
-        {!hideIcon && (
-          <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: category?.backgroundColor || '#a8a8b3' }}>
-            <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
-          </span>
+        {showOwnerAvatar ? (
+          source?.photo ? (
+            <img className="tx-item__avatar" src={source.photo} alt={source.name} referrerPolicy="no-referrer" />
+          ) : (
+            <span className="tx-item__avatar" style={{ background: source?.color || 'var(--color-primary)' }}>
+              {(source?.name || '?').charAt(0).toUpperCase()}
+            </span>
+          )
+        ) : (
+          !hideIcon && (
+            <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: category?.backgroundColor || '#a8a8b3' }}>
+              <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
+            </span>
+          )
         )}
         <div className="tx-item__body">
           <div className="tx-item__titlerow">
             <p className="tx-item__title">{tx.description}</p>
-            {source?.name && (
+            {!showOwnerAvatar && source?.name && (
               <span className="tx-item__owner" style={{ background: source.color, color: '#ffffff' }}>
                 {source.name}
               </span>
@@ -189,8 +199,9 @@ export function CategoryAccordion({
   dragProps,
   itemDragMode,
   itemDragPropsFor,
+  ownerAvatar,
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const total = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
   const paid = expenses.reduce((s, e) => s + (e.isPaid ? Number(e.amount) || 0 : 0), 0)
   const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0
@@ -275,6 +286,7 @@ export function CategoryAccordion({
                 dragMode={itemDragMode}
                 dragProps={itemDragMode && itemDragPropsFor ? itemDragPropsFor(e.id) : null}
                 hideIcon
+                showOwnerAvatar={ownerAvatar}
               />
             ))
           )}
