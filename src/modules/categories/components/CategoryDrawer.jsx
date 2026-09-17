@@ -58,7 +58,7 @@ export default function CategoryDrawer({ onClose }) {
 
       <div className="category-drawer__list">
         {!newCategory && categories.length === 0 ? (
-          <p className="category-drawer__empty">Aún no tienes categorías. Toca + para crear una.</p>
+          <p className="category-drawer__empty">Aún no tienes categorías</p>
         ) : (
           categories.map((cat) =>
             editingId === cat.id ? (

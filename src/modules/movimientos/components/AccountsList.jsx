@@ -76,7 +76,7 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
 
       {visible.length === 0 ? (
         <p className="acc-list__empty">
-          {accounts.length === 0 ? 'Aún no tienes cuentas. Crea la primera.' : 'No hay cuentas que coincidan.'}
+          {accounts.length === 0 ? 'Aún no tienes cuentas' : 'No hay cuentas que coincidan.'}
         </p>
       ) : (
         <div className="acc-list__grid">

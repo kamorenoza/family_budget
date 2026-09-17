@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
+import DateField from '../../../shared/components/DateField/DateField.jsx'
 import { CategoryGlyph } from '../../categories/categories.constants'
 import '../../presupuesto/components/IncomeDrawer.css'
 import '../../presupuesto/components/ExpenseDrawer.css'
@@ -113,10 +114,7 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
 
         <div className="income-field">
           <p className="income-field__label">Categoría</p>
-          {categories.length === 0 ? (
-            <p className="expense-hint">Aún no hay categorías. Créalas en su sección.</p>
-          ) : (
-            <div className="expense-select">
+          <div className="expense-select">
               <button type="button" className="expense-select__trigger" onClick={() => setCatOpen((v) => !v)}>
                 {selectedCat ? (
                   <span className="expense-select__value">
@@ -126,7 +124,9 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
                     <span className="expense-cat__name">{selectedCat.name}</span>
                   </span>
                 ) : (
-                  <span className="expense-select__placeholder">Sin categoría</span>
+                  <span className="expense-select__placeholder">
+                    {categories.length === 0 ? '' : 'Sin categoría'}
+                  </span>
                 )}
                 <svg
                   className={`expense-select__chevron${catOpen ? ' expense-select__chevron--open' : ''}`}
@@ -170,15 +170,12 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
                 </ul>
               )}
             </div>
-          )}
         </div>
 
         <div className="income-field">
           <label className="income-field__label" htmlFor="mov-date">Fecha</label>
-          <input
+          <DateField
             id="mov-date"
-            type="date"
-            className="income-field__input"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />

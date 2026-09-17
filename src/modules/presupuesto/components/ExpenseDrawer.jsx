@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
+import DateField from '../../../shared/components/DateField/DateField.jsx'
 import { CategoryGlyph, categoryIconKeys, colorPalette } from '../../categories/categories.constants'
 import './IncomeDrawer.css'
 import './ExpenseDrawer.css'
@@ -227,10 +228,7 @@ export default function ExpenseDrawer({
         {mode === 'normal' ? (
           <div className="income-field">
             <p className="income-field__label">Categoría</p>
-            {categories.length === 0 ? (
-              <p className="expense-hint">Aún no hay categorías. Créalas en su sección.</p>
-            ) : (
-              <div className="expense-select">
+            <div className="expense-select">
                 <button
                   type="button"
                   className="expense-select__trigger"
@@ -244,7 +242,9 @@ export default function ExpenseDrawer({
                       <span className="expense-cat__name">{selectedCat.name}</span>
                     </span>
                   ) : (
-                    <span className="expense-select__placeholder">Sin categoría</span>
+                    <span className="expense-select__placeholder">
+                      {categories.length === 0 ? '' : 'Sin categoría'}
+                    </span>
                   )}
                   <svg
                     className={`expense-select__chevron${catOpen ? ' expense-select__chevron--open' : ''}`}
@@ -288,7 +288,6 @@ export default function ExpenseDrawer({
                   </ul>
                 )}
               </div>
-            )}
           </div>
         ) : (
           <>
@@ -388,10 +387,8 @@ export default function ExpenseDrawer({
 
         <div className="income-field">
           <label className="income-field__label" htmlFor="expense-date">{fixed ? 'Desde la fecha' : 'Fecha'}</label>
-          <input
+          <DateField
             id="expense-date"
-            type="date"
-            className="income-field__input"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />

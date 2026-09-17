@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
+import DateField from '../../../shared/components/DateField/DateField.jsx'
 import './IncomeDrawer.css'
 
 // Formatea el valor con separador de miles mientras se escribe.
@@ -111,10 +112,8 @@ export default function IncomeDrawer({ members, income, defaultMonth, defaultYea
 
         <div className="income-field">
           <label className="income-field__label" htmlFor="income-date">{fixed ? 'Desde la fecha' : 'Fecha'}</label>
-          <input
+          <DateField
             id="income-date"
-            type="date"
-            className="income-field__input"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />

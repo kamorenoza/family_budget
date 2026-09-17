@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import CalendarIcon from '../icons/CalendarIcon.jsx'
 import UserIcon from '../icons/UserIcon.jsx'
@@ -24,35 +23,13 @@ const navItems = [
 export default function Layout() {
   const location = useLocation()
   const onConfig = location.pathname.startsWith('/configuracion')
-  const [rail, setRail] = useState(
-    () => localStorage.getItem('drawerRail') === 'true',
-  )
-
-  useEffect(() => {
-    localStorage.setItem('drawerRail', String(rail))
-  }, [rail])
 
   return (
-    <div className={`app ${rail ? 'app--rail' : ''} ${onConfig ? 'app--config' : ''}`}>
+    <div className={`app ${onConfig ? 'app--config' : ''}`}>
       {/* Acciones superiores (categorías + configuración) */}
       <TopActions activeSettings={onConfig} />
 
-      {/* Navbar flotante (desktop) */}
-      <header className="floating-navbar">
-        <button
-          type="button"
-          className="floating-navbar__toggle"
-          onClick={() => setRail((prev) => !prev)}
-          aria-label={rail ? 'Expandir menú' : 'Colapsar menú'}
-          aria-expanded={!rail}
-        >
-          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-            <path fill="#2d7797" d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z" />
-          </svg>
-        </button>
-      </header>
-
-      {/* Menú lateral (desktop) */}
+      {/* Menú lateral (desktop) — siempre colapsado con label bajo el icono */}
       <aside className="side-menu">
         <nav className="side-menu__list">
           {navItems.map(({ to, label, Icon, user }) => (
@@ -69,7 +46,7 @@ export default function Layout() {
                   <span className={`side-menu__icon ${user ? 'side-menu__icon--user' : ''}`}>
                     <Icon color={isActive ? COLOR_PRIMARY : COLOR_GREY} />
                   </span>
-                  {!rail && <span className="side-menu__label">{label}</span>}
+                  <span className="side-menu__label">{label}</span>
                 </>
               )}
             </NavLink>

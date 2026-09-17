@@ -170,7 +170,7 @@ export default function Compras() {
 
           {visibleLists.length === 0 ? (
             <p className="compras__empty">
-              {lists.length === 0 ? 'Aún no tienes listas. Crea la primera.' : 'No hay listas en esta sección.'}
+              {lists.length === 0 ? 'Aún no tienes listas' : 'No hay listas en esta sección.'}
             </p>
           ) : (
             <div className="compras__body">

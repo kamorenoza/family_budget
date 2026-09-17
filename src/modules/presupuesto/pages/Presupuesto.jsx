@@ -398,7 +398,7 @@ export default function Presupuesto() {
           </div>
           <div className="tx-list tx-list--income">
             {listIncomes.length === 0 ? (
-              <p className="tx-empty">Sin ingresos este mes. Toca + para agregar.</p>
+              <p className="tx-empty">Sin ingresos este mes</p>
             ) : (
               listIncomes.map((tx) => {
                 const m = memberOf(tx.memberEmail)
@@ -491,7 +491,7 @@ export default function Presupuesto() {
           </div>
           <div className="tx-list">
             {sortedExpenses.length === 0 ? (
-              <p className="tx-empty">Sin gastos este mes. Toca + para agregar.</p>
+              <p className="tx-empty">Sin gastos este mes</p>
             ) : filteredExpenses.length === 0 ? (
               <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
             ) : (

@@ -1,0 +1,45 @@
+/* Campo de fecha: valor formateado a la derecha + input nativo transparente encima. */
+.date-field {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 7%, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.date-field__value {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  text-align: left;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Input nativo invisible pero interactivo (abre el date picker al tocar). */
+.date-field__native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  background: transparent;
+  color: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  -webkit-appearance: none;
+  appearance: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.date-field__native:focus {
+  outline: none;
+}

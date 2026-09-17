@@ -300,7 +300,7 @@ export default function Personal() {
         </div>
         <div className="tx-list tx-list--income">
           {myIncomes.length === 0 ? (
-            <p className="tx-empty">Sin ingresos este mes. Toca + para agregar.</p>
+            <p className="tx-empty">Sin ingresos este mes</p>
           ) : (
             myIncomes.map((tx) => {
               const m = memberOf(tx.memberEmail)
@@ -393,7 +393,7 @@ export default function Personal() {
         </div>
         <div className="tx-list">
           {myExpenses.length === 0 ? (
-            <p className="tx-empty">Sin gastos este mes. Toca + para agregar.</p>
+            <p className="tx-empty">Sin gastos este mes</p>
           ) : filteredExpenses.length === 0 ? (
             <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
           ) : (
