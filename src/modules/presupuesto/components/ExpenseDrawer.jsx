@@ -473,6 +473,7 @@ export default function ExpenseDrawer({
                     onClick={() => {
                       setSourceType('bolsillo')
                       setSourceBolsilloId(b.id)
+                      setPaid(true)
                       setError('')
                     }}
                   >

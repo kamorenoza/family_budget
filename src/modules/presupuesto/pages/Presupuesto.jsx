@@ -188,15 +188,33 @@ export default function Presupuesto() {
   })
   // Dentro de cada categoría, los gastos se ordenan con el mismo criterio elegido.
   const orderItems = (arr) => sortExpensesBy(arr)
-  const saveCatOrder = (ids) => {
-    const prev = prefs.budgetCategoryOrder || []
-    const seen = new Set(ids)
-    setPref('budgetCategoryOrder', [...ids, ...prev.filter((id) => !seen.has(id))])
-  }
-  const { order: catDragOrder, dragPropsFor: catDragPropsFor } = useDragOrder(catIds, saveCatOrder, {
-    attr: 'data-cat-id',
+
+  // En modo agrupado, categorías y bolsillos comparten un mismo orden para poder intercalarlos.
+  const groupBlocks = [
+    ...catIds.map((id) => ({ type: 'cat', key: `cat:${id}`, id })),
+    ...groupBolsillos.map((tx) => ({ type: 'bol', key: `bol:${tx.id}`, tx })),
+  ]
+  const blockOrderPref = prefs.budgetGroupOrder || []
+  const sortedBlocks = [...groupBlocks].sort((a, b) => {
+    const ia = blockOrderPref.indexOf(a.key)
+    const ib = blockOrderPref.indexOf(b.key)
+    const na = ia === -1 ? Infinity : ia
+    const nb = ib === -1 ? Infinity : ib
+    if (na !== nb) return na - nb
+    return 0
   })
-  const renderCatIds = reorderMode ? catDragOrder.filter((id) => byCat.has(id)) : catIds
+  const saveBlockOrder = (keys) => {
+    const prev = prefs.budgetGroupOrder || []
+    const seen = new Set(keys)
+    setPref('budgetGroupOrder', [...keys, ...prev.filter((k) => !seen.has(k))])
+  }
+  const { order: blockOrder, dragPropsFor: blockDragPropsFor } = useDragOrder(
+    sortedBlocks.map((b) => b.key),
+    saveBlockOrder,
+    { attr: 'data-block-id' },
+  )
+  const blockByKey = new Map(groupBlocks.map((b) => [b.key, b]))
+  const renderBlocks = reorderMode ? blockOrder.map((k) => blockByKey.get(k)).filter(Boolean) : sortedBlocks
 
   // Cambia el criterio de orden; avisa si se perderá el orden personalizado.
   const changeSort = async (value) => {
@@ -700,49 +718,50 @@ export default function Presupuesto() {
               <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
             ) : groupMode ? (
               <>
-                {renderCatIds.map((catId) => (
-                  <CategoryAccordion
-                    key={catId}
-                    category={catId === 'sin' ? null : categoryOf(catId)}
-                    expenses={orderItems(byCat.get(catId) || [])}
-                    onToggle={handleTogglePaid}
-                    onEdit={openEditExpense}
-                    dateLabelOf={(e) => fullDateLabel(dayOfDate(e.date), period.month, period.year)}
-                    sourceOf={(e) => {
-                      const mm = memberOf(e.memberEmail)
-                      return mm
-                        ? { name: mm.name.split(' ')[0], color: mm.color || 'var(--color-primary)', photo: mm.photo }
-                        : null
-                    }}
-                    dragMode={reorderMode}
-                    dragProps={reorderMode ? catDragPropsFor(catId) : null}
-                    itemDragMode={reorderMode}
-                    itemDragPropsFor={dragPropsFor}
-                    ownerAvatar
-                  />
-                ))}
-                {groupBolsillos.map((tx) => {
-                  const childExpenses = visibleExpenses.filter(
-                    (e) => e.sourceType === 'bolsillo' && e.bolsilloId === tx.id,
-                  )
-                  const bm = memberOf(tx.memberEmail)
-                  const bolsilloSource = bm
-                    ? { name: bm.name.split(' ')[0], color: bm.color || 'var(--color-primary)' }
-                    : null
-                  return (
+                {renderBlocks.map((block) =>
+                  block.type === 'cat' ? (
+                    <CategoryAccordion
+                      key={block.key}
+                      category={block.id === 'sin' ? null : categoryOf(block.id)}
+                      expenses={orderItems(byCat.get(block.id) || [])}
+                      onToggle={handleTogglePaid}
+                      onEdit={openEditExpense}
+                      dateLabelOf={(e) => fullDateLabel(dayOfDate(e.date), period.month, period.year)}
+                      sourceOf={(e) => {
+                        const mm = memberOf(e.memberEmail)
+                        return mm
+                          ? { name: mm.name.split(' ')[0], color: mm.color || 'var(--color-primary)', photo: mm.photo }
+                          : null
+                      }}
+                      dragMode={reorderMode}
+                      dragProps={reorderMode ? blockDragPropsFor(block.key) : null}
+                      itemDragMode={reorderMode}
+                      itemDragPropsFor={dragPropsFor}
+                      ownerAvatar
+                    />
+                  ) : (
                     <BolsilloAccordion
-                      key={tx.id}
-                      tx={tx}
-                      used={usedByBolsillo[tx.id] || 0}
-                      childExpenses={childExpenses}
+                      key={block.key}
+                      tx={block.tx}
+                      used={usedByBolsillo[block.tx.id] || 0}
+                      childExpenses={visibleExpenses.filter(
+                        (e) => e.sourceType === 'bolsillo' && e.bolsilloId === block.tx.id,
+                      )}
                       categoryOf={categoryOf}
-                      source={bolsilloSource}
+                      source={(() => {
+                        const bm = memberOf(block.tx.memberEmail)
+                        return bm
+                          ? { name: bm.name.split(' ')[0], color: bm.color || 'var(--color-primary)' }
+                          : null
+                      })()}
                       dateLabelOf={(c) => fullDateLabel(dayOfDate(c.date), period.month, period.year)}
                       onToggle={handleTogglePaid}
                       onEdit={openEditExpense}
+                      dragMode={reorderMode}
+                      dragProps={reorderMode ? blockDragPropsFor(block.key) : null}
                     />
-                  )
-                })}
+                  ),
+                )}
               </>
             ) : (
               renderExpenses.map((tx) => {
