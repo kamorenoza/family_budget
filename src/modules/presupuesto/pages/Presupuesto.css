@@ -53,9 +53,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-      padding-right: 15px;
-    padding-bottom: 50px;
-    margin-right: -15px;
+  padding-right: 15px;
+  padding-bottom: 50px;
+  margin-right: -15px;
 }
 
 /* ===== Encabezado ===== */
@@ -269,7 +269,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
+  width: 48px;
   height: 30px;
   border: none;
   border-radius: 10px;
@@ -304,7 +304,7 @@
 .tx-section__actions {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 
 .tx-filter {
@@ -896,8 +896,8 @@
     grid-template-columns: minmax(0, 400px) 1fr;
     grid-template-rows: auto 1fr;
     grid-template-areas:
-      'header header'
-      'side scroll';
+      "header header"
+      "side scroll";
     column-gap: var(--space-lg);
     row-gap: 40px;
   }
