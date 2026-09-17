@@ -80,7 +80,41 @@ export function useIncomes() {
     updateIncomeDoc(income.id, { endMonth: prevMonthKey(monthKey) })
   }, [])
 
-  return { incomes, addIncome, updateIncome, toggleReceived, deleteIncome, removeFixedMonth, endFixedFrom }
+  // Fijo: ajusta valor/nombre solo en el mes indicado, sin tocar los demás meses.
+  const overrideIncomeMonth = useCallback((income, monthKey, patch) => {
+    const monthOverrides = { ...(income.monthOverrides || {}) }
+    monthOverrides[monthKey] = { ...(monthOverrides[monthKey] || {}), ...patch }
+    updateIncomeDoc(income.id, { monthOverrides })
+  }, [])
+
+  // Fijo: corta el actual en el mes previo y crea uno nuevo desde monthKey con los datos nuevos.
+  const splitIncomeFrom = useCallback(
+    (income, monthKey, data) => {
+      if (!familyId) return
+      updateIncomeDoc(income.id, { endMonth: prevMonthKey(monthKey) })
+      const { received, monthKey: _mk, repeatMonths, ...base } = data
+      const doc = { ...base, fixed: true, startMonth: monthKey, receivedMonths: {}, createdAt: Date.now() }
+      if (income.endMonth && income.endMonth >= monthKey) doc.endMonth = income.endMonth
+      else {
+        const end = endMonthFor(monthKey, repeatMonths)
+        if (end) doc.endMonth = end
+      }
+      addIncomeDoc(familyId, doc)
+    },
+    [familyId],
+  )
+
+  return {
+    incomes,
+    addIncome,
+    updateIncome,
+    toggleReceived,
+    deleteIncome,
+    removeFixedMonth,
+    endFixedFrom,
+    overrideIncomeMonth,
+    splitIncomeFrom,
+  }
 }
 
 // Devuelve la clave YYYY-MM del mes anterior.
@@ -88,5 +122,15 @@ function prevMonthKey(key) {
   const [y, m] = key.split('-').map(Number)
   const d = new Date(y, m - 1, 1)
   d.setMonth(d.getMonth() - 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Último mes (YYYY-MM) al repetir `count` meses desde `startKey`; null si no hay límite.
+function endMonthFor(startKey, count) {
+  const n = Number(count)
+  if (!n || n < 1) return null
+  const [y, m] = startKey.split('-').map(Number)
+  const d = new Date(y, m - 1, 1)
+  d.setMonth(d.getMonth() + (n - 1))
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }

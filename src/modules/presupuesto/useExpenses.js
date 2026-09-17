@@ -44,7 +44,8 @@ export function useExpenses() {
     if (data.fixed) {
       const paidMonths =
         expense.paidMonths || (expense.paid && expense.monthKey ? { [expense.monthKey]: true } : {})
-      const doc = { ...base, startMonth: monthKey, paidMonths }
+      // "Todos": los datos nuevos aplican a todos los meses, se descartan los ajustes por mes.
+      const doc = { ...base, startMonth: monthKey, paidMonths, monthOverrides: {} }
       const end = endMonthFor(monthKey, repeatMonths)
       doc.endMonth = end || null
       updateExpenseDoc(expense.id, doc)
@@ -82,7 +83,41 @@ export function useExpenses() {
     updateExpenseDoc(expense.id, { endMonth: prevMonthKey(monthKey) })
   }, [])
 
-  return { expenses, addExpense, updateExpense, togglePaid, deleteExpense, removeFixedMonth, endFixedFrom }
+  // Fijo: ajusta valor/nombre solo en el mes indicado, sin tocar los demás meses.
+  const overrideExpenseMonth = useCallback((expense, monthKey, patch) => {
+    const monthOverrides = { ...(expense.monthOverrides || {}) }
+    monthOverrides[monthKey] = { ...(monthOverrides[monthKey] || {}), ...patch }
+    updateExpenseDoc(expense.id, { monthOverrides })
+  }, [])
+
+  // Fijo: corta el actual en el mes previo y crea uno nuevo desde monthKey con los datos nuevos.
+  const splitExpenseFrom = useCallback(
+    (expense, monthKey, data) => {
+      if (!familyId) return
+      updateExpenseDoc(expense.id, { endMonth: prevMonthKey(monthKey) })
+      const { paid, monthKey: _mk, repeatMonths, ...base } = data
+      const doc = { ...base, fixed: true, startMonth: monthKey, paidMonths: {}, createdAt: Date.now() }
+      if (expense.endMonth && expense.endMonth >= monthKey) doc.endMonth = expense.endMonth
+      else {
+        const end = endMonthFor(monthKey, repeatMonths)
+        if (end) doc.endMonth = end
+      }
+      addExpenseDoc(familyId, doc)
+    },
+    [familyId],
+  )
+
+  return {
+    expenses,
+    addExpense,
+    updateExpense,
+    togglePaid,
+    deleteExpense,
+    removeFixedMonth,
+    endFixedFrom,
+    overrideExpenseMonth,
+    splitExpenseFrom,
+  }
 }
 
 // Devuelve la clave YYYY-MM del mes anterior.

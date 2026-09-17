@@ -105,8 +105,7 @@ export default function ExpenseDrawer({
       return onClose()
     }
 
-    // Gasto normal: el origen es una persona o un bolsillo.
-    if (sourceType === 'bolsillo' && !sourceBolsilloId) return setError('Selecciona de dónde sale.')
+    // Gasto normal: el origen es una persona o un bolsillo.    if (sourceType === 'bolsillo' && !sourceBolsilloId) return setError('Selecciona de dónde sale.')
     if (sourceType === 'person' && !owner) return setError('Selecciona de dónde sale.')
     const err = onSubmit({
       description: description.trim(),
@@ -122,6 +121,8 @@ export default function ExpenseDrawer({
       monthKey,
       date,
     })
+    // El padre pide mantener el drawer abierto (p. ej. para elegir a qué meses aplica).
+    if (err && err.keepOpen) return
     if (err) return setError(err)
     onClose()
   }

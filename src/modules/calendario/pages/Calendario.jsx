@@ -5,6 +5,7 @@ import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import IncomeDrawer from '../../presupuesto/components/IncomeDrawer.jsx'
 import ExpenseDrawer from '../../presupuesto/components/ExpenseDrawer.jsx'
 import IncomeDeleteDialog from '../../presupuesto/components/IncomeDeleteDialog.jsx'
+import EditScopeDialog from '../../presupuesto/components/EditScopeDialog.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import {
   MONTHS,
@@ -20,7 +21,7 @@ import { useIncomes } from '../../presupuesto/useIncomes'
 import { useExpenses } from '../../presupuesto/useExpenses'
 import { useCategories } from '../../categories/useCategories'
 import { IncomeItem, ExpenseItem } from '../../presupuesto/components/TxItems.jsx'
-import { dayOfDate, monthKeyOf, isVisibleInMonth, formatCurrency } from '../../presupuesto/presupuesto.utils'
+import { dayOfDate, monthKeyOf, isVisibleInMonth, formatCurrency, applyMonthOverride } from '../../presupuesto/presupuesto.utils'
 
 // Punticos indicadores bajo el número del día (verde = ingreso, color de categoría/bolsillo = gasto).
 const INCOME_MARK = '#57bd85'
@@ -204,11 +205,13 @@ function MonthMobile({ year, month, todayDay, itemsByDay, marksByDay, memberOf, 
   const cells = getMonthDays(year, month)
   const totalDays = daysInMonth(year, month)
   const dayRefs = useRef({})
-  const [selectedDay, setSelectedDay] = useState(todayDay || 1)
+  const dayStoreKey = `calDay:${year}-${month}`
+  const [selectedDay, setSelectedDay] = useState(() => Number(localStorage.getItem(dayStoreKey)) || todayDay || 1)
 
-  // Al cambiar de mes, resalta el día de hoy y hace scroll a su tarjeta (sin animación).
+  // Al cambiar de mes, resalta el día guardado (o el de hoy) y hace scroll a su tarjeta (sin animación).
   useEffect(() => {
-    const target = todayDay || 1
+    const saved = Number(localStorage.getItem(`calDay:${year}-${month}`))
+    const target = saved || todayDay || 1
     setSelectedDay(target)
     requestAnimationFrame(() => {
       const node = dayRefs.current[target]
@@ -218,6 +221,7 @@ function MonthMobile({ year, month, todayDay, itemsByDay, marksByDay, memberOf, 
 
   const selectDay = (day) => {
     setSelectedDay(day)
+    localStorage.setItem(`calDay:${year}-${month}`, String(day))
     const node = dayRefs.current[day]
     if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -423,7 +427,7 @@ export default function Calendario() {
   const isMobile = useIsMobile()
   const { user } = useAuth()
   const { members } = useMembers(user)
-  const { incomes, addIncome, updateIncome, deleteIncome, removeFixedMonth, endFixedFrom } = useIncomes()
+  const { incomes, addIncome, updateIncome, deleteIncome, removeFixedMonth, endFixedFrom, overrideIncomeMonth, splitIncomeFrom } = useIncomes()
   const {
     expenses,
     addExpense,
@@ -432,6 +436,8 @@ export default function Calendario() {
     deleteExpense,
     removeFixedMonth: removeExpenseMonth,
     endFixedFrom: endExpenseFrom,
+    overrideExpenseMonth,
+    splitExpenseFrom,
   } = useExpenses()
   const { categories } = useCategories()
 
@@ -441,6 +447,10 @@ export default function Calendario() {
   const [expenseOpen, setExpenseOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
   const [expenseDeleteOpen, setExpenseDeleteOpen] = useState(false)
+  const [incomeScopeOpen, setIncomeScopeOpen] = useState(false)
+  const [pendingIncome, setPendingIncome] = useState(null)
+  const [expenseScopeOpen, setExpenseScopeOpen] = useState(false)
+  const [pendingExpense, setPendingExpense] = useState(null)
   const [filterEmails, setFilterEmails] = useState([])
   const [statusFilter, setStatusFilter] = useState(null)
   const [modalDay, setModalDay] = useState(null)
@@ -461,22 +471,26 @@ export default function Calendario() {
       : null
 
   const monthKey = monthKeyOf(period.month, period.year)
+  const myEmail = user?.email
   const memberOf = (email) => members.find((m) => m.email === email)
   const categoryOf = (id) => categories.find((c) => c.id === id)
+
+  // Un movimiento personal solo lo ve el usuario logueado (su dueño).
+  const canSeePersonal = (tx) => tx.scope !== 'personal' || tx.memberEmail === myEmail
 
   // Ingresos y gastos visibles del mes, con su estado recibido/pagado (igual que Presupuesto).
   const visibleIncomes = incomes
     .filter((inc) => isVisibleInMonth(inc, monthKey))
-    .map((inc) => ({
-      ...inc,
-      isReceived: inc.fixed ? !!(inc.receivedMonths || {})[monthKey] : !!inc.received,
-    }))
+    .map((inc) => {
+      const o = applyMonthOverride(inc, monthKey)
+      return { ...o, isReceived: inc.fixed ? !!(inc.receivedMonths || {})[monthKey] : !!inc.received }
+    })
   const visibleExpenses = expenses
     .filter((exp) => isVisibleInMonth(exp, monthKey))
-    .map((exp) => ({
-      ...exp,
-      isPaid: exp.fixed ? !!(exp.paidMonths || {})[monthKey] : !!exp.paid,
-    }))
+    .map((exp) => {
+      const o = applyMonthOverride(exp, monthKey)
+      return { ...o, isPaid: exp.fixed ? !!(exp.paidMonths || {})[monthKey] : !!exp.paid }
+    })
 
   // Agrupa por día (según la fecha guardada); ingresos primero, luego gastos.
   const itemsByDay = {}
@@ -485,12 +499,12 @@ export default function Calendario() {
     itemsByDay[day].push(entry)
   }
   visibleIncomes
-    .filter((tx) => passesFilter(tx.memberEmail) && passesStatus(tx.isReceived))
+    .filter((tx) => canSeePersonal(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isReceived))
     .forEach((tx) => addItem(dayOfDate(tx.date), { kind: 'income', tx }))
   // Los gastos asociados a un bolsillo se muestran como un movimiento más;
   // se excluyen solo las metas de bolsillo (que no son un gasto con fecha).
   visibleExpenses
-    .filter((tx) => tx.kind !== 'bolsillo' && passesFilter(tx.memberEmail) && passesStatus(tx.isPaid))
+    .filter((tx) => tx.kind !== 'bolsillo' && canSeePersonal(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isPaid))
     .forEach((tx) => addItem(dayOfDate(tx.date), { kind: 'expense', tx }))
 
   // Bolsillos del mes y disponible por persona (para el drawer de gastos).
@@ -546,8 +560,31 @@ export default function Calendario() {
     setEditingIncome(null)
     setDeleteOpen(false)
   }
-  const handleSubmitIncome = (data) =>
-    editingIncome ? updateIncome(editingIncome, data) : addIncome(data)
+  // Al editar el valor o el nombre de un ingreso fijo, se pregunta a qué meses aplica.
+  const handleSubmitIncome = (data) => {
+    if (
+      editingIncome &&
+      editingIncome.fixed &&
+      data.fixed &&
+      (Number(data.amount) !== Number(editingIncome.amount) ||
+        data.description !== editingIncome.description)
+    ) {
+      setPendingIncome({ item: editingIncome, data })
+      setIncomeScopeOpen(true)
+      return null
+    }
+    return editingIncome ? updateIncome(editingIncome, data) : addIncome(data)
+  }
+  const applyIncomeScope = (scope) => {
+    const p = pendingIncome
+    if (!p) return
+    if (scope === 'month')
+      overrideIncomeMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+    else if (scope === 'from') splitIncomeFrom(p.item, monthKey, p.data)
+    else updateIncome(p.item, p.data)
+    setIncomeScopeOpen(false)
+    setPendingIncome(null)
+  }
   const handleDeleteIncome = async () => {
     const inc = editingIncome
     if (!inc) return
@@ -583,8 +620,31 @@ export default function Calendario() {
     setEditingExpense(null)
     setExpenseDeleteOpen(false)
   }
-  const handleSubmitExpense = (data) =>
-    editingExpense ? updateExpense(editingExpense, data) : addExpense(data)
+  // Al editar el valor o el nombre de un gasto fijo, se pregunta a qué meses aplica.
+  const handleSubmitExpense = (data) => {
+    if (
+      editingExpense &&
+      editingExpense.fixed &&
+      data.fixed &&
+      (Number(data.amount) !== Number(editingExpense.amount) ||
+        data.description !== editingExpense.description)
+    ) {
+      setPendingExpense({ item: editingExpense, data })
+      setExpenseScopeOpen(true)
+      return null
+    }
+    return editingExpense ? updateExpense(editingExpense, data) : addExpense(data)
+  }
+  const applyExpenseScope = (scope) => {
+    const p = pendingExpense
+    if (!p) return
+    if (scope === 'month')
+      overrideExpenseMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+    else if (scope === 'from') splitExpenseFrom(p.item, monthKey, p.data)
+    else updateExpense(p.item, p.data)
+    setExpenseScopeOpen(false)
+    setPendingExpense(null)
+  }
   const handleDeleteExpense = async () => {
     const exp = editingExpense
     if (!exp) return
@@ -701,6 +761,16 @@ export default function Calendario() {
         <IncomeDeleteDialog onConfirm={confirmDeleteScope} onCancel={() => setDeleteOpen(false)} />
       )}
 
+      {incomeScopeOpen && (
+        <EditScopeDialog
+          onConfirm={applyIncomeScope}
+          onCancel={() => {
+            setIncomeScopeOpen(false)
+            setPendingIncome(null)
+          }}
+        />
+      )}
+
       <SideDrawer open={expenseOpen} onClose={closeExpense} title={editingExpense ? 'Editar gasto' : 'Agregar gasto'}>
         <ExpenseDrawer
           key={editingExpense?.id || 'new'}
@@ -719,6 +789,16 @@ export default function Calendario() {
 
       {expenseDeleteOpen && (
         <IncomeDeleteDialog onConfirm={confirmDeleteExpenseScope} onCancel={() => setExpenseDeleteOpen(false)} />
+      )}
+
+      {expenseScopeOpen && (
+        <EditScopeDialog
+          onConfirm={applyExpenseScope}
+          onCancel={() => {
+            setExpenseScopeOpen(false)
+            setPendingExpense(null)
+          }}
+        />
       )}
     </section>
   )

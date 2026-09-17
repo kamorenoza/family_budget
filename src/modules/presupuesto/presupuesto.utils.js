@@ -31,6 +31,16 @@ export function monthKeyOf(month, year) {
   return `${year}-${String(month + 1).padStart(2, '0')}`
 }
 
+// Aplica el ajuste de "solo este mes" (valor/nombre) guardado en monthOverrides.
+export function applyMonthOverride(item, monthKey) {
+  const ov = item.monthOverrides && item.monthOverrides[monthKey]
+  if (!ov) return item
+  const next = { ...item }
+  if ('amount' in ov) next.amount = ov.amount
+  if ('description' in ov) next.description = ov.description
+  return next
+}
+
 // ¿El movimiento fijo/variable está visible en el mes indicado?
 export function isVisibleInMonth(item, monthKey) {
   if (item.fixed) {

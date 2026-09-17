@@ -11,7 +11,7 @@ import './Compras.css'
 export default function Compras() {
   const { lists, myEmail, addList, updateList, deleteList, addItem, updateItem, deleteItem, toggleItem, reorderItems } = useShopping()
 
-  const [scope, setScope] = useState('personal')
+  const [scope, setScope] = useState(() => localStorage.getItem('comprasScope') || 'personal')
   const [selectedId, setSelectedId] = useState(null)
   const [listDrawer, setListDrawer] = useState(false)
   const [editingList, setEditingList] = useState(null)
@@ -19,6 +19,11 @@ export default function Compras() {
   const [editingItem, setEditingItem] = useState(null)
 
   const selected = useMemo(() => lists.find((l) => l.id === selectedId) || null, [lists, selectedId])
+
+  // Recuerda la pestaña elegida.
+  useEffect(() => {
+    localStorage.setItem('comprasScope', scope)
+  }, [scope])
 
   // Personales: solo mías. Familiares (o listas antiguas sin scope): de todos.
   const visibleLists = useMemo(

@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import CalendarIcon from '../icons/CalendarIcon.jsx'
 import UserIcon from '../icons/UserIcon.jsx'
 import BudgetIcon from '../icons/BudgetIcon.jsx'
@@ -26,6 +27,11 @@ export default function Layout() {
   const location = useLocation()
   const onConfig = location.pathname.startsWith('/configuracion')
   const { loading: familyLoading } = useFamily()
+
+  // Recuerda la última página para volver a ella al reabrir la app.
+  useEffect(() => {
+    localStorage.setItem('lastRoute', location.pathname)
+  }, [location.pathname])
 
   // Mientras se resuelve la familia (y llegan los datos), muestra el loader
   // en vez del app-shell vacío.

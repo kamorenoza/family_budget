@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CategoryGlyph } from '../../categories/categories.constants'
 import { formatCurrency, monthKeyLabel } from '../presupuesto.utils'
 
-export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit, dragMode, dragProps }) {
+export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onToggle, onEdit, dragMode, dragProps, hideIcon }) {
   const repeatsUntil = tx.fixed && tx.endMonth
   return (
     <div
@@ -19,9 +19,11 @@ export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onTo
             </svg>
           </span>
         )}
-        <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: category?.backgroundColor || '#c4c4cc' }}>
-          <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
-        </span>
+        {!hideIcon && (
+          <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: category?.backgroundColor || '#a8a8b3' }}>
+            <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
+          </span>
+        )}
         <div className="tx-item__body">
           <div className="tx-item__titlerow">
             <p className="tx-item__title">{tx.description}</p>
@@ -45,10 +47,8 @@ export function ExpenseItem({ tx, category, source, dateLabel, bolsilloTag, onTo
         <div className="tx-item__right tx-item__right--actions">
           <div className="tx-item__amountcol">
             <span className="tx-item__amount tx-item__amount--gasto">{formatCurrency(tx.amount)}</span>
-            {repeatsUntil ? (
+            {repeatsUntil && (
               <span className="tx-pill tx-pill--until">Hasta {monthKeyLabel(tx.endMonth)}</span>
-            ) : (
-              tx.fixed && <span className="tx-pill tx-pill--fixed">Fijo</span>
             )}
             {bolsilloTag && (
               <span className="tx-pill" style={{ background: bolsilloTag.color, color: '#ffffff' }}>
@@ -177,6 +177,113 @@ export function BolsilloAccordion({ tx, used, childExpenses, categoryOf, source,
   )
 }
 
+// Categoría como accordion: cabecera con progreso (pagado vs total) y, al abrir, sus gastos.
+export function CategoryAccordion({
+  category,
+  expenses,
+  onToggle,
+  onEdit,
+  dateLabelOf,
+  sourceOf,
+  dragMode,
+  dragProps,
+  itemDragMode,
+  itemDragPropsFor,
+}) {
+  const [open, setOpen] = useState(true)
+  const total = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+  const paid = expenses.reduce((s, e) => s + (e.isPaid ? Number(e.amount) || 0 : 0), 0)
+  const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0
+  const color = category?.backgroundColor || '#a8a8b3'
+  const name = category?.name || 'Sin categoría'
+  return (
+    <div
+      className={`tx-item bolsillo${open ? ' bolsillo--open' : ''}${dragMode ? ' tx-item--drag' : ''}`}
+      data-cat-id={dragProps ? dragProps['data-cat-id'] : undefined}
+    >
+      <div className="tx-item__row">
+        {dragMode && dragProps && (
+          <span className="tx-item__drag" {...dragProps.handleProps} aria-label="Arrastrar para reordenar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+              <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+              <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+            </svg>
+          </span>
+        )}
+        <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: color }}>
+          <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
+        </span>
+        <div className="bolsillo__main">
+          <div className="bolsillo__line">
+            <div className="tx-item__body">
+              <div className="tx-item__titlerow">
+                <p className="tx-item__title">{name}</p>
+                <span className="tx-item__owner" style={{ background: color, color: '#fff' }}>
+                  {expenses.length}
+                </span>
+              </div>
+            </div>
+            <div className="tx-item__right tx-item__right--actions">
+              <span className="tx-item__amount tx-item__amount--gasto">{formatCurrency(total)}</span>
+              <button
+                type="button"
+                className="tx-item__edit bolsillo__toggle"
+                onClick={() => setOpen((o) => !o)}
+                aria-label={open ? 'Ocultar detalle' : 'Ver detalle'}
+              >
+                <svg
+                  className={`bolsillo__chevron${open ? ' bolsillo__chevron--open' : ''}`}
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="tx-item__bar">
+            <div className="tx-item__bar-track">
+              <div className="tx-item__bar-fill" style={{ width: `${pct}%`, background: color }} />
+            </div>
+            <span className="tx-item__bar-label">
+              {formatCurrency(paid)} pagado de {formatCurrency(total)}
+            </span>
+          </div>
+        </div>
+      </div>
+      {open && (
+        <div className="bolsillo__body">
+          {expenses.length === 0 ? (
+            <p className="tx-empty">Sin gastos en esta categoría.</p>
+          ) : (
+            expenses.map((e) => (
+              <ExpenseItem
+                key={e.id}
+                tx={e}
+                category={category}
+                source={sourceOf ? sourceOf(e) : null}
+                dateLabel={dateLabelOf ? dateLabelOf(e) : null}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                dragMode={itemDragMode}
+                dragProps={itemDragMode && itemDragPropsFor ? itemDragPropsFor(e.id) : null}
+                hideIcon
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function IncomeItem({ tx, member, memberColor, memberName, dateLabel, onEdit }) {
   const repeatsUntil = tx.fixed && tx.endMonth
   return (
@@ -193,10 +300,8 @@ export function IncomeItem({ tx, member, memberColor, memberName, dateLabel, onE
           <p className="tx-item__title">{tx.description}</p>
           <div className="tx-item__subrow">
             {dateLabel && <span className="tx-item__date">{dateLabel}</span>}
-            {repeatsUntil ? (
+            {repeatsUntil && (
               <span className="tx-pill tx-pill--until">Hasta {monthKeyLabel(tx.endMonth)}</span>
-            ) : (
-              tx.fixed && <span className="tx-pill tx-pill--fixed">Fijo</span>
             )}
           </div>
         </div>

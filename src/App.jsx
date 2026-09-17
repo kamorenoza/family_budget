@@ -9,6 +9,15 @@ import Movimientos from './modules/movimientos/pages/Movimientos.jsx'
 import Compras from './modules/compras/pages/Compras.jsx'
 import Configuracion from './modules/settings/pages/Configuracion.jsx'
 
+const APP_ROUTES = ['/calendario', '/personal', '/presupuesto', '/movimientos', '/compras', '/configuracion']
+
+// Redirige a la última página visitada (guardada en localStorage) o al presupuesto.
+function RootRedirect() {
+  const last = localStorage.getItem('lastRoute')
+  const target = last && APP_ROUTES.includes(last) ? last : '/presupuesto'
+  return <Navigate to={target} replace />
+}
+
 export default function App() {
   return (
     <Routes>
@@ -21,7 +30,7 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/presupuesto" replace />} />
+        <Route index element={<RootRedirect />} />
         <Route path="calendario" element={<Calendario />} />
         <Route path="personal" element={<Personal />} />
         <Route path="presupuesto" element={<Presupuesto />} />

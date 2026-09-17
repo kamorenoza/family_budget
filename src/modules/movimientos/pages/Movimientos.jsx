@@ -14,7 +14,7 @@ export default function Movimientos() {
   const { categories } = useCategories()
 
   const [selectedId, setSelectedId] = useState(null)
-  const [scope, setScope] = useState('personal')
+  const [scope, setScope] = useState(() => localStorage.getItem('movimientosScope') || 'personal')
   const [accountDrawer, setAccountDrawer] = useState(null)
   const [editingAccount, setEditingAccount] = useState(null)
   const [expenseDrawer, setExpenseDrawer] = useState(false)
@@ -26,13 +26,19 @@ export default function Movimientos() {
   )
 
   // Al cargar por primera vez elige la pestaña con cuentas: personales si tengo, si no familiares.
-  const pickedDefault = useRef(false)
+  // Si ya hay una pestaña guardada, se respeta y no se auto-elige.
+  const pickedDefault = useRef(!!localStorage.getItem('movimientosScope'))
   useEffect(() => {
     if (pickedDefault.current || accounts.length === 0) return
     pickedDefault.current = true
     const hasPersonal = accounts.some((a) => a.scope === 'personal' && a.owner === myEmail)
     if (!hasPersonal && accounts.some((a) => a.scope !== 'personal')) setScope('family')
   }, [accounts, myEmail])
+
+  // Recuerda la pestaña elegida.
+  useEffect(() => {
+    localStorage.setItem('movimientosScope', scope)
+  }, [scope])
 
   // Personales: solo mías. Familiares (o cuentas antiguas sin scope): de todos.
   const visibleAccounts = useMemo(

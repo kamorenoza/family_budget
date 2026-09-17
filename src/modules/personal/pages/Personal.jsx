@@ -6,7 +6,8 @@ import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import IncomeDrawer from '../../presupuesto/components/IncomeDrawer.jsx'
 import ExpenseDrawer from '../../presupuesto/components/ExpenseDrawer.jsx'
 import IncomeDeleteDialog from '../../presupuesto/components/IncomeDeleteDialog.jsx'
-import { ExpenseItem, BolsilloAccordion, IncomeItem } from '../../presupuesto/components/TxItems.jsx'
+import EditScopeDialog from '../../presupuesto/components/EditScopeDialog.jsx'
+import { ExpenseItem, BolsilloAccordion, CategoryAccordion, IncomeItem } from '../../presupuesto/components/TxItems.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import { useAuth } from '../../../shared/context/AuthContext.jsx'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
@@ -21,12 +22,13 @@ import {
   fullDateLabel,
   monthKeyOf,
   isVisibleInMonth,
+  applyMonthOverride,
 } from '../../presupuesto/presupuesto.utils'
 
 export default function Personal() {
   const { user } = useAuth()
   const { members } = useMembers(user)
-  const { incomes, addIncome, updateIncome, deleteIncome, removeFixedMonth, endFixedFrom } = useIncomes()
+  const { incomes, addIncome, updateIncome, deleteIncome, removeFixedMonth, endFixedFrom, overrideIncomeMonth, splitIncomeFrom } = useIncomes()
   const {
     expenses,
     addExpense,
@@ -35,6 +37,8 @@ export default function Personal() {
     deleteExpense,
     removeFixedMonth: removeExpenseMonth,
     endFixedFrom: endExpenseFrom,
+    overrideExpenseMonth,
+    splitExpenseFrom,
   } = useExpenses()
   const { categories } = useCategories()
 
@@ -44,11 +48,17 @@ export default function Personal() {
   const [expenseOpen, setExpenseOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
   const [expenseDeleteOpen, setExpenseDeleteOpen] = useState(false)
+  const [incomeScopeOpen, setIncomeScopeOpen] = useState(false)
+  const [pendingIncome, setPendingIncome] = useState(null)
+  const [expenseScopeOpen, setExpenseScopeOpen] = useState(false)
+  const [pendingExpense, setPendingExpense] = useState(null)
   const [filterOpen, setFilterOpen] = useState(false)
   // Preferencia de orden personal (propia de cada usuario, no se comparte).
   const { prefs, setPref } = useUserPrefs()
   const expenseSort = prefs.personalExpenseSort ?? 'fecha'
   const setExpenseSort = (v) => setPref('personalExpenseSort', v)
+  const groupBy = prefs.personalGroupBy ?? 'none'
+  const setGroupBy = (v) => setPref('personalGroupBy', v)
   const [reorderMode, setReorderMode] = useState(false)
   const [expenseQuery, setExpenseQuery] = useState('')
   const filterRef = useRef(null)
@@ -76,43 +86,47 @@ export default function Personal() {
   // Solo lo de esta persona (origen = usuario) y visible en el mes.
   const myIncomes = incomes
     .filter((inc) => inc.memberEmail === email && isVisibleInMonth(inc, monthKey))
-    .map((inc) => ({
-      ...inc,
-      isReceived: inc.fixed ? !!(inc.receivedMonths || {})[monthKey] : !!inc.received,
-    }))
+    .map((inc) => {
+      const o = applyMonthOverride(inc, monthKey)
+      return { ...o, isReceived: inc.fixed ? !!(inc.receivedMonths || {})[monthKey] : !!inc.received }
+    })
 
   const myExpenses = expenses
     .filter((exp) => exp.memberEmail === email && isVisibleInMonth(exp, monthKey))
-    .map((exp) => ({
-      ...exp,
-      isPaid: exp.fixed ? !!(exp.paidMonths || {})[monthKey] : !!exp.paid,
-    }))
+    .map((exp) => {
+      const o = applyMonthOverride(exp, monthKey)
+      return { ...o, isPaid: exp.fixed ? !!(exp.paidMonths || {})[monthKey] : !!exp.paid }
+    })
+
+  // Ordena una lista de gastos según el criterio seleccionado (se reutiliza dentro de cada grupo).
+  const sortExpensesBy = (arr) =>
+    [...arr].sort((a, b) => {
+      if (expenseSort === 'manual') {
+        const ord = prefs.personalExpenseOrder || []
+        const ia = ord.indexOf(a.id)
+        const ib = ord.indexOf(b.id)
+        const na = ia === -1 ? Infinity : ia
+        const nb = ib === -1 ? Infinity : ib
+        if (na !== nb) return na - nb
+        return String(a.date).localeCompare(String(b.date))
+      }
+      if (expenseSort === 'categoria') {
+        return (categoryOf(a.categoryId)?.name || '').localeCompare(categoryOf(b.categoryId)?.name || '')
+      }
+      if (expenseSort === 'tipo') {
+        return (a.kind === 'bolsillo' ? 0 : 1) - (b.kind === 'bolsillo' ? 0 : 1)
+      }
+      if (expenseSort === 'fechaDesc') {
+        const byDate = String(b.date).localeCompare(String(a.date))
+        return byDate !== 0 ? byDate : (b.createdAt || 0) - (a.createdAt || 0)
+      }
+      // 'fecha': ascendente, del primero al último agregado.
+      const byDate = String(a.date).localeCompare(String(b.date))
+      return byDate !== 0 ? byDate : (a.createdAt || 0) - (b.createdAt || 0)
+    })
 
   // Orden del listado según el filtro seleccionado.
-  const sortedExpenses = [...myExpenses].sort((a, b) => {
-    if (expenseSort === 'manual') {
-      const ord = prefs.personalExpenseOrder || []
-      const ia = ord.indexOf(a.id)
-      const ib = ord.indexOf(b.id)
-      const na = ia === -1 ? Infinity : ia
-      const nb = ib === -1 ? Infinity : ib
-      if (na !== nb) return na - nb
-      return String(a.date).localeCompare(String(b.date))
-    }
-    if (expenseSort === 'categoria') {
-      return (categoryOf(a.categoryId)?.name || '').localeCompare(categoryOf(b.categoryId)?.name || '')
-    }
-    if (expenseSort === 'tipo') {
-      return (a.kind === 'bolsillo' ? 0 : 1) - (b.kind === 'bolsillo' ? 0 : 1)
-    }
-    if (expenseSort === 'fechaDesc') {
-      const byDate = String(b.date).localeCompare(String(a.date))
-      return byDate !== 0 ? byDate : (b.createdAt || 0) - (a.createdAt || 0)
-    }
-    // 'fecha': ascendente, del primero al último agregado.
-    const byDate = String(a.date).localeCompare(String(b.date))
-    return byDate !== 0 ? byDate : (a.createdAt || 0) - (b.createdAt || 0)
-  })
+  const sortedExpenses = sortExpensesBy(myExpenses)
 
   const query = expenseQuery.trim().toLowerCase()
   const queryDigits = expenseQuery.replace(/\D/g, '')
@@ -138,6 +152,72 @@ export default function Personal() {
     topLevelExpenses.map((e) => e.id),
     saveExpenseOrder,
   )
+
+  // Agrupación por categoría: los bolsillos van aparte y los gastos normales se agrupan.
+  const groupMode = groupBy === 'categoria'
+  const groupBolsillos = topLevelExpenses.filter((e) => e.kind === 'bolsillo')
+  const groupNormal = topLevelExpenses.filter((e) => e.kind !== 'bolsillo')
+  const byCat = new Map()
+  groupNormal.forEach((e) => {
+    const key = e.categoryId || 'sin'
+    if (!byCat.has(key)) byCat.set(key, [])
+    byCat.get(key).push(e)
+  })
+  const catOrderPref = prefs.personalCategoryOrder || []
+  const catIds = [...byCat.keys()].sort((a, b) => {
+    const ia = catOrderPref.indexOf(a)
+    const ib = catOrderPref.indexOf(b)
+    const na = ia === -1 ? Infinity : ia
+    const nb = ib === -1 ? Infinity : ib
+    if (na !== nb) return na - nb
+    return String(a).localeCompare(String(b))
+  })
+  // Dentro de cada categoría, los gastos se ordenan con el mismo criterio elegido.
+  const orderItems = (arr) => sortExpensesBy(arr)
+  const saveCatOrder = (ids) => {
+    const prev = prefs.personalCategoryOrder || []
+    const seen = new Set(ids)
+    setPref('personalCategoryOrder', [...ids, ...prev.filter((id) => !seen.has(id))])
+  }
+  const { order: catDragOrder, dragPropsFor: catDragPropsFor } = useDragOrder(catIds, saveCatOrder, {
+    attr: 'data-cat-id',
+  })
+  const renderCatIds = reorderMode ? catDragOrder.filter((id) => byCat.has(id)) : catIds
+
+  // Cambia el criterio de orden; avisa si se perderá el orden personalizado.
+  const changeSort = async (value) => {
+    if (value === expenseSort) {
+      setFilterOpen(false)
+      return
+    }
+    if (expenseSort === 'manual' && value !== 'manual') {
+      const ok = await confirm({
+        title: '¿Cambiar el orden?',
+        message: 'Se perderá el orden personalizado que definiste.',
+        confirmText: 'Cambiar',
+        cancelText: 'Cancelar',
+      })
+      if (!ok) {
+        setFilterOpen(false)
+        return
+      }
+      setPref('personalExpenseOrder', [])
+      setReorderMode(false)
+    }
+    setExpenseSort(value)
+    setFilterOpen(false)
+  }
+
+  // Cambia el agrupamiento sin afectar el criterio de orden.
+  const changeGroupBy = (value) => {
+    setGroupBy(value)
+    // Al agrupar por categoría, ordenar por categoría/tipo no aplica: se vuelve a fecha.
+    if (value === 'categoria' && (expenseSort === 'categoria' || expenseSort === 'tipo')) {
+      setExpenseSort('fecha')
+    }
+    setFilterOpen(false)
+  }
+
   const renderExpenses = reorderMode
     ? dragOrder.map((id) => expenseById.get(id)).filter(Boolean)
     : topLevelExpenses
@@ -188,8 +268,33 @@ export default function Personal() {
     setEditingIncome(null)
     setDeleteOpen(false)
   }
-  const handleSubmitIncome = (data) =>
-    editingIncome ? updateIncome(editingIncome, data) : addIncome(data)
+  // Al editar el valor o el nombre de un ingreso fijo, se pregunta a qué meses aplica.
+  const handleSubmitIncome = (data) => {
+    if (
+      editingIncome &&
+      editingIncome.fixed &&
+      data.fixed &&
+      (Number(data.amount) !== Number(editingIncome.amount) ||
+        data.description !== editingIncome.description)
+    ) {
+      setPendingIncome({ item: editingIncome, data })
+      setIncomeScopeOpen(true)
+      return null
+    }
+    return editingIncome ? updateIncome(editingIncome, data) : addIncome(data)
+  }
+
+  // Aplica el cambio del ingreso fijo según el alcance elegido.
+  const applyIncomeScope = (scope) => {
+    const p = pendingIncome
+    if (!p) return
+    if (scope === 'month')
+      overrideIncomeMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+    else if (scope === 'from') splitIncomeFrom(p.item, monthKey, p.data)
+    else updateIncome(p.item, p.data)
+    setIncomeScopeOpen(false)
+    setPendingIncome(null)
+  }
 
   const handleDeleteIncome = async () => {
     const inc = editingIncome
@@ -231,8 +336,34 @@ export default function Personal() {
     setEditingExpense(null)
     setExpenseDeleteOpen(false)
   }
-  const handleSubmitExpense = (data) =>
-    editingExpense ? updateExpense(editingExpense, data) : addExpense(data)
+  // Al editar el valor o el nombre de un gasto fijo, se pregunta a qué meses aplica.
+  const handleSubmitExpense = (data) => {
+    if (
+      editingExpense &&
+      editingExpense.fixed &&
+      data.fixed &&
+      (Number(data.amount) !== Number(editingExpense.amount) ||
+        data.description !== editingExpense.description)
+    ) {
+      setPendingExpense({ item: editingExpense, data })
+      setExpenseScopeOpen(true)
+      return { keepOpen: true }
+    }
+    return editingExpense ? updateExpense(editingExpense, data) : addExpense(data)
+  }
+
+  // Aplica el cambio del gasto fijo según el alcance elegido.
+  const applyExpenseScope = (scope) => {
+    const p = pendingExpense
+    if (!p) return
+    if (scope === 'month')
+      overrideExpenseMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+    else if (scope === 'from') splitExpenseFrom(p.item, monthKey, p.data)
+    else updateExpense(p.item, p.data)
+    setExpenseScopeOpen(false)
+    setPendingExpense(null)
+    closeExpense()
+  }
 
   const handleDeleteExpense = async () => {
     const exp = editingExpense
@@ -407,19 +538,25 @@ export default function Personal() {
                       </button>
                     )}
                   </div>
+                  <p className="tx-filter__label">Agrupar por</p>
+                  <select
+                    className="tx-filter__select"
+                    value={groupBy}
+                    onChange={(e) => changeGroupBy(e.target.value)}
+                  >
+                    <option value="none">Sin agrupar</option>
+                    <option value="categoria">Categoría</option>
+                  </select>
                   <p className="tx-filter__label">Ordenar por</p>
                   <select
                     className="tx-filter__select"
                     value={expenseSort}
-                    onChange={(e) => {
-                      setExpenseSort(e.target.value)
-                      setFilterOpen(false)
-                    }}
+                    onChange={(e) => changeSort(e.target.value)}
                   >
                     <option value="fecha">Fecha (más antiguo)</option>
                     <option value="fechaDesc">Fecha (más reciente)</option>
-                    <option value="categoria">Categoría</option>
-                    <option value="tipo">Tipo (bolsillo o normal)</option>
+                    {!groupMode && <option value="categoria">Categoría</option>}
+                    {!groupMode && <option value="tipo">Tipo (bolsillo o normal)</option>}
                     <option value="manual">Personalizado</option>
                   </select>
                 </div>
@@ -460,6 +597,42 @@ export default function Personal() {
             <p className="tx-empty">Sin gastos este mes</p>
           ) : topLevelExpenses.length === 0 ? (
             <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
+          ) : groupMode ? (
+            <>
+              {renderCatIds.map((catId) => (
+                <CategoryAccordion
+                  key={catId}
+                  category={catId === 'sin' ? null : categoryOf(catId)}
+                  expenses={orderItems(byCat.get(catId) || [])}
+                  onToggle={handleTogglePaid}
+                  onEdit={openEditExpense}
+                  dateLabelOf={(e) => fullDateLabel(dayOfDate(e.date), period.month, period.year)}
+                  sourceOf={() => null}
+                  dragMode={reorderMode}
+                  dragProps={reorderMode ? catDragPropsFor(catId) : null}
+                  itemDragMode={reorderMode}
+                  itemDragPropsFor={dragPropsFor}
+                />
+              ))}
+              {groupBolsillos.map((tx) => {
+                const childExpenses = myExpenses.filter(
+                  (e) => e.sourceType === 'bolsillo' && e.bolsilloId === tx.id,
+                )
+                return (
+                  <BolsilloAccordion
+                    key={tx.id}
+                    tx={tx}
+                    used={usedByBolsillo[tx.id] || 0}
+                    childExpenses={childExpenses}
+                    categoryOf={categoryOf}
+                    source={null}
+                    dateLabelOf={(c) => fullDateLabel(dayOfDate(c.date), period.month, period.year)}
+                    onToggle={handleTogglePaid}
+                    onEdit={openEditExpense}
+                  />
+                )
+              })}
+            </>
           ) : (
             renderExpenses.map((tx) => {
               if (tx.kind === 'bolsillo') {
@@ -520,6 +693,16 @@ export default function Personal() {
         <IncomeDeleteDialog onConfirm={confirmDeleteScope} onCancel={() => setDeleteOpen(false)} />
       )}
 
+      {incomeScopeOpen && (
+        <EditScopeDialog
+          onConfirm={applyIncomeScope}
+          onCancel={() => {
+            setIncomeScopeOpen(false)
+            setPendingIncome(null)
+          }}
+        />
+      )}
+
       <SideDrawer open={expenseOpen} onClose={closeExpense} title={editingExpense ? 'Editar gasto' : 'Agregar gasto'}>
         <ExpenseDrawer
           key={editingExpense?.id || 'new'}
@@ -540,6 +723,16 @@ export default function Personal() {
 
       {expenseDeleteOpen && (
         <IncomeDeleteDialog onConfirm={confirmDeleteExpenseScope} onCancel={() => setExpenseDeleteOpen(false)} />
+      )}
+
+      {expenseScopeOpen && (
+        <EditScopeDialog
+          onConfirm={applyExpenseScope}
+          onCancel={() => {
+            setExpenseScopeOpen(false)
+            setPendingExpense(null)
+          }}
+        />
       )}
     </section>
   )

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 // Reordenamiento por arrastre (funciona con mouse y con toque en PWA/móvil).
 // Recibe la lista de ids en su orden actual y una función que persiste el nuevo orden.
 // Devuelve el orden en vivo (para pintar mientras se arrastra) y las props del "asa".
-export function useDragOrder(ids, onCommit) {
+export function useDragOrder(ids, onCommit, options = {}) {
+  const attr = options.attr || 'data-drag-id'
   const [order, setOrder] = useState(ids)
   const orderRef = useRef(ids)
   const draggingId = useRef(null)
@@ -37,8 +38,8 @@ export function useDragOrder(ids, onCommit) {
       if (!draggingId.current) return
       ev.preventDefault()
       const el = document.elementFromPoint(ev.clientX, ev.clientY)
-      const row = el && el.closest('[data-drag-id]')
-      const overId = row && row.getAttribute('data-drag-id')
+      const row = el && el.closest(`[${attr}]`)
+      const overId = row && row.getAttribute(attr)
       if (overId) moveOver(overId)
     }
     const up = () => {
@@ -56,7 +57,7 @@ export function useDragOrder(ids, onCommit) {
   }
 
   const dragPropsFor = (id) => ({
-    'data-drag-id': id,
+    [attr]: id,
     handleProps: { onPointerDown: startPointerDrag(id) },
   })
 
