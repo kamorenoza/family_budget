@@ -112,7 +112,7 @@ export function BolsilloAccordion({ tx, used, childExpenses, categoryOf, source,
             </svg>
           )}
         </span>
-        <div className="bolsillo__main">
+        <div className="bolsillo__main" onClick={() => setOpen((o) => !o)}>
           <div className="bolsillo__line">
             <div className="tx-item__body">
               <div className="tx-item__titlerow">
@@ -131,7 +131,7 @@ export function BolsilloAccordion({ tx, used, childExpenses, categoryOf, source,
               <button
                 type="button"
                 className="tx-item__edit bolsillo__toggle"
-                onClick={() => setOpen((o) => !o)}
+                onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
                 aria-label={open ? 'Ocultar detalle' : 'Ver detalle'}
               >
                 <svg
@@ -231,7 +231,7 @@ export function CategoryAccordion({
         <span className="tx-item__icon-cat tx-item__icon-cat--square" style={{ background: color }}>
           <CategoryGlyph name={category?.icon || 'cat1'} color="#ffffff" size={20} />
         </span>
-        <div className="bolsillo__main">
+        <div className="bolsillo__main" onClick={() => setOpen((o) => !o)}>
           <div className="bolsillo__line">
             <div className="tx-item__body">
               <div className="tx-item__titlerow">
@@ -246,7 +246,7 @@ export function CategoryAccordion({
               <button
                 type="button"
                 className="tx-item__edit bolsillo__toggle"
-                onClick={() => setOpen((o) => !o)}
+                onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
                 aria-label={open ? 'Ocultar detalle' : 'Ver detalle'}
               >
                 <svg

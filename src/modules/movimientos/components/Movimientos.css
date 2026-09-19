@@ -118,11 +118,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 36px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-primary);
   font-size: 0.82rem;
@@ -134,6 +134,12 @@
 
 .acc-add:hover {
   background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+/* En la fila de filtros el botón agregar es solo icono (no crece con label). */
+.acc-add--icon {
+  width: 35px;
+  padding: 0;
 }
 
 .acc-add__label {
@@ -148,6 +154,10 @@
   .acc-add__label {
     display: inline;
   }
+  .acc-add--icon {
+    width: 35px;
+    padding: 0;
+  }
 }
 
 .acc-list__grid {
@@ -161,8 +171,6 @@
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 70px;
-      margin-right: -16px;
-    padding-right: 16px;
 }
 
 @media (min-width: 700px) {
@@ -243,8 +251,9 @@
 
 .acc-card__type {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
+  line-height: 0.9rem;
 }
 
 .acc-card__menu {
@@ -381,11 +390,6 @@
   flex: 1;
 }
 
-/* Acerca los movimientos al buscador (reduce el gap de la columna). */
-.acc-detail__col--right .acc-filter {
-  margin-bottom: calc(-1 * var(--space-md));
-}
-
 /* La búsqueda de Presupuesto se oculta en móvil; en el detalle la mantenemos
    visible con su contorno pill, pero sin el borde interno del input. */
 .acc-filter__search.tx-search {
@@ -395,9 +399,10 @@
   min-width: 0;
   padding: 6px var(--space-sm);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-text-secondary);
+  height: 35px;
 }
 
 .acc-filter__search .tx-search__input {
@@ -436,10 +441,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -643,6 +648,29 @@
   }
 }
 
+/* Móvil: solo la lista de movimientos hace scroll; el resto queda fijo. */
+@media (max-width: 767px) {
+  .acc-detail__scroll {
+    overflow: hidden;
+    padding-bottom: 0;
+    gap: var(--space-md);
+  }
+  .acc-detail__col--right {
+    flex: 1;
+    min-height: 0;
+    gap: var(--space-sm);
+  }
+  .acc-detail__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: var(--space-xs);
+    padding-bottom: 70px;
+    margin-right: -10px;
+    padding-right: 16px;
+  }
+}
+
 .acc-history__table {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -697,10 +725,42 @@
   gap: var(--space-sm);
 }
 
+/* Lista de movimientos (desde el buscador hacia abajo). */
+.acc-detail__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
 .mov-section__title {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+}
+
+/* Acordeón de completados (cuentas con pendientes). */
+.mov-accordion__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.mov-accordion__title {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.mov-accordion__count {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .mov-groups {
@@ -732,6 +792,11 @@
   text-align: left;
 }
 
+/* Encabezado de categoría no colapsable (completados en cuentas con pendientes). */
+.mov-group__head--static {
+  cursor: default;
+}
+
 .mov-group__chevron {
   transition: transform var(--transition-fast);
   color: var(--color-text-secondary);
@@ -745,6 +810,7 @@
   flex: 1;
   font-weight: var(--font-weight-semibold);
   font-size: 0.9rem;
+  color: var(--color-text-primary);
 }
 
 .mov-group__total {
@@ -808,13 +874,16 @@
 .mov-item__desc {
   font-weight: var(--font-weight-semibold);
   font-size: 0.92rem;
+  line-height: 1.15;
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .mov-item__meta {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -823,6 +892,7 @@
 
 .mov-item__value {
   font-weight: var(--font-weight-semibold);
+  font-size: 0.85rem;
   flex-shrink: 0;
 }
 
@@ -861,3 +931,120 @@
 .acc-movtabs .expense-tab--active {
   background: #ffffff;
 }
+
+/* ===== Cuenta de crédito (deuda) ===== */
+.acc-card--debt {
+  background: #fbe9e9;
+}
+
+.acc-card--debt .acc-card__icon {
+  background: #d98a8a;
+}
+
+.acc-card--debt .acc-card__balance-value {
+  color: #cf7f7f;
+}
+
+/* Select nativo del tipo de cuenta en el drawer. */
+.acc-drawer__select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  padding-right: calc(var(--space-sm) * 2 + 16px);
+}
+
+.acc-drawer__row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.acc-drawer__row > .income-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Barra con el botón de agregar movimiento en la vista de deuda. */
+.debt-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
+/* Título de sección con botón de agregar en la misma fila. */
+.mov-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+/* Lista de cuotas. */
+.cuotas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.cuota-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+
+.cuota-row--paid {
+  opacity: 0.6;
+}
+
+.cuota-row__check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #cf7f7f;
+  cursor: pointer;
+}
+
+.cuota-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cuota-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cuota-row__name {
+  font-size: 0.82rem;
+  line-height: 1rem;
+}
+
+.cuota-row__date {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  line-height: 0.85rem;
+}
+
+.cuota-row__value {
+  font-size: 0.82rem;
+}
+
+.cuota-row--paid .cuota-row__name {
+  text-decoration: line-through;
+}
+

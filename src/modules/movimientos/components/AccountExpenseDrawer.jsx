@@ -15,8 +15,9 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 export default function AccountExpenseDrawer({ account, categories, expense, onSubmit, onDelete, onClose }) {
   const editing = !!expense
   const isNormal = account.type === 'normal'
+  const isDebt = account.type === 'credito'
   const canPend = isNormal && !!account.allowPending
-  const [type, setType] = useState(expense?.type || 'gasto')
+  const [type, setType] = useState(expense?.type || (isDebt ? 'ingreso' : 'gasto'))
   const [description, setDescription] = useState(expense?.description || '')
   const [value, setValue] = useState(expense ? formatThousands(expense.value) : '')
   const [categoryId, setCategoryId] = useState(expense?.category?.id || '')
@@ -42,7 +43,7 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
       isPending: canPend ? isPending : false,
       comments: comments.trim(),
       date,
-      category: cat,
+      category: isDebt ? null : cat,
     })
     onClose()
   }
@@ -112,10 +113,10 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
           </div>
         </div>
 
+        {!isDebt && (
         <div className="income-field">
           <p className="income-field__label">Categoría</p>
-          <div className="expense-select">
-              <button type="button" className="expense-select__trigger" onClick={() => setCatOpen((v) => !v)}>
+          <div className="expense-select">              <button type="button" className="expense-select__trigger" onClick={() => setCatOpen((v) => !v)}>
                 {selectedCat ? (
                   <span className="expense-select__value">
                     <span className="expense-cat__icon" style={{ background: selectedCat.backgroundColor }}>
@@ -171,6 +172,7 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
               )}
             </div>
         </div>
+        )}
 
         <div className="income-field">
           <label className="income-field__label" htmlFor="mov-date">Fecha</label>
@@ -189,17 +191,19 @@ export default function AccountExpenseDrawer({ account, categories, expense, onS
           </label>
         )}
 
-        <div className="income-field">
-          <label className="income-field__label" htmlFor="mov-comments">Comentarios (opcional)</label>
-          <input
-            id="mov-comments"
-            type="text"
-            className="income-field__input"
-            placeholder="Notas"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-          />
-        </div>
+        {!isDebt && (
+          <div className="income-field">
+            <label className="income-field__label" htmlFor="mov-comments">Comentarios (opcional)</label>
+            <input
+              id="mov-comments"
+              type="text"
+              className="income-field__input"
+              placeholder="Notas"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+            />
+          </div>
+        )}
 
         {error && <p className="income-drawer__error">{error}</p>}
 

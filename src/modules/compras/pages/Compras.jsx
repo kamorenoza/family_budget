@@ -48,6 +48,16 @@ export default function Compras() {
     [visibleLists],
   )
 
+  // Grupos existentes en la lista abierta (para sugerir en el drawer).
+  const itemGroups = useMemo(() => {
+    const out = []
+    ;(selected?.items || []).forEach((i) => {
+      const g = (i.group || '').trim()
+      if (g && !out.includes(g)) out.push(g)
+    })
+    return out
+  }, [selected])
+
   // Al cargar elige la pestaña con listas: personales si tengo, si no familiares.
   const pickedDefault = useRef(false)
   useEffect(() => {
@@ -166,7 +176,7 @@ export default function Compras() {
               </button>
             </div>
             <button type="button" className="acc-add" onClick={openAddList} aria-label="Agregar lista">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
               <span className="acc-add__label">Agregar</span>
@@ -234,6 +244,7 @@ export default function Compras() {
         {selected && (
           <ShoppingItemDrawer
             item={editingItem}
+            groups={itemGroups}
             onSubmit={submitItem}
             onDelete={removeItem}
             onClose={closeItemDrawer}

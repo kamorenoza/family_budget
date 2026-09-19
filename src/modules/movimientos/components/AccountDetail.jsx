@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AccountCard from './AccountCard.jsx'
 import AccountExpenseItem from './AccountExpenseItem.jsx'
+import SearchIcon from '../../../shared/components/icons/SearchIcon.jsx'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 import { formatCurrency } from '../../presupuesto/presupuesto.utils'
 import { EXPENSE_GROUP_BY, EXPENSE_ORDER_BY } from '../accounts.constants'
-import { last6MonthsHistory, monthGroupLabel } from '../accounts.utils'
+import { last6MonthsHistory, monthGroupLabel, installmentSchedule, expenseDateLabel } from '../accounts.utils'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
 import { useFamilyPrefs } from '../../../shared/hooks/useFamilyPrefs'
 
 // Menú de búsqueda + agrupar/ordenar de los movimientos.
-function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, onClear, defaultGroup }) {
+function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, onClear, defaultGroup, onAdd }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -24,25 +26,6 @@ function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, o
 
   return (
     <div className="acc-filter">
-      <div className="tx-search acc-filter__search">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <input
-          type="text"
-          className="tx-search__input"
-          placeholder="Buscar movimiento"
-          value={query}
-          onChange={(e) => onQuery(e.target.value)}
-        />
-        {query && (
-          <button type="button" className="tx-search__clear" onClick={() => onQuery('')} aria-label="Limpiar">
-            ×
-          </button>
-        )}
-      </div>
-
       <div className="acc-filter__menu-wrap" ref={ref}>
         <button
           type="button"
@@ -50,9 +33,7 @@ function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, o
           onClick={() => setOpen((v) => !v)}
           aria-label="Filtrar"
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 5h18M6 12h12M10 19h4" />
-          </svg>
+          <FilterIcon size={18} />
         </button>
         {open && (
           <div className="acc-filter__menu">
@@ -91,6 +72,28 @@ function MovementsFilter({ query, onQuery, groupBy, onGroup, orderBy, onOrder, o
           </div>
         )}
       </div>
+
+      <div className="tx-search acc-filter__search">
+        <SearchIcon size={16} />
+        <input
+          type="text"
+          className="tx-search__input"
+          placeholder="Buscar movimiento"
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+        />
+        {query && (
+          <button type="button" className="tx-search__clear" onClick={() => onQuery('')} aria-label="Limpiar">
+            ×
+          </button>
+        )}
+      </div>
+
+      <button type="button" className="acc-add acc-add--icon" onClick={onAdd} aria-label="Agregar movimiento">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
     </div>
   )
 }
@@ -153,15 +156,22 @@ function groupExpenses(list, groupBy, orderBy) {
   return groups
 }
 
-function ExpenseGroups({ groups, collapsed, onToggle, onEdit }) {
+function ExpenseGroups({ groups, collapsed, onToggle, onEdit, noCollapse }) {
   return (
     <div className="mov-groups">
       {groups.map((g) => {
-        const isOpen = !collapsed[g.key]
+        const isOpen = noCollapse ? true : !collapsed[g.key]
         const total = signedTotal(g.items)
         return (
           <div className={`mov-group${g.label ? '' : ' mov-group--flat'}`} key={g.key} style={g.color ? { borderLeftColor: g.color } : undefined}>
-            {g.label && (
+            {g.label && (noCollapse ? (
+              <div className="mov-group__head mov-group__head--static">
+                <span className="mov-group__label">{g.label}</span>
+                <span className="mov-group__total">
+                  {formatCurrency(Math.abs(total))}
+                </span>
+              </div>
+            ) : (
               <button type="button" className="mov-group__head" onClick={() => onToggle(g.key)}>
                 <span className="mov-group__label">{g.label}</span>
                 <span className="mov-group__total">
@@ -174,7 +184,7 @@ function ExpenseGroups({ groups, collapsed, onToggle, onEdit }) {
                   <path d="M9 6l6 6-6 6" />
                 </svg>
               </button>
-            )}
+            ))}
             {isOpen && (
               <div className="mov-group__items">
                 {g.items.map((e) => (
@@ -189,7 +199,130 @@ function ExpenseGroups({ groups, collapsed, onToggle, onEdit }) {
   )
 }
 
-export default function AccountDetail({ account, onBack, onEdit, onDelete, onAddExpense, onEditExpense }) {
+// Fila de una cuota: checkbox para pagar y cuerpo para editar/eliminar.
+function CuotaRow({ cuota, onToggle, onEdit }) {
+  return (
+    <div className={`cuota-row${cuota.paid ? ' cuota-row--paid' : ''}`}>
+      <input
+        type="checkbox"
+        className="cuota-row__check"
+        checked={cuota.paid}
+        onChange={(e) => onToggle(cuota, e.target.checked)}
+      />
+      <button type="button" className="cuota-row__main" onClick={() => onEdit(cuota)}>
+        <span className="cuota-row__info">
+          <span className="cuota-row__name">Cuota {cuota.index}</span>
+          <span className="cuota-row__date">{cuota.date ? expenseDateLabel(cuota.date) : ''}</span>
+        </span>
+        <span className="cuota-row__value">{formatCurrency(cuota.value)}</span>
+      </button>
+    </div>
+  )
+}
+
+// Fila de movimiento en modo cuotas: check (marcado por defecto), click abre el drawer.
+function MovementRow({ expense, onToggle, onEdit }) {
+  const isIncome = expense.type === 'ingreso'
+  const checked = expense.paid !== false
+
+  return (
+    <div className="cuota-row">
+      <input
+        type="checkbox"
+        className="cuota-row__check"
+        checked={checked}
+        onChange={(e) => onToggle(expense, e.target.checked)}
+      />
+      <button type="button" className="cuota-row__main" onClick={() => onEdit(expense)}>
+        <span className="cuota-row__info">
+          <span className="cuota-row__name">{expense.description}</span>
+          <span className="cuota-row__date">{expense.date ? expenseDateLabel(expense.date) : ''}</span>
+        </span>
+        <span className={`cuota-row__value ${isIncome ? 'mov-item__value--in' : 'mov-item__value--out'}`}>
+          {formatCurrency(expense.value)}
+        </span>
+      </button>
+    </div>
+  )
+}
+
+// Vista de una cuenta de crédito (deuda): cuotas + movimientos o solo movimientos.
+function DebtView({ account, onAdd, onEditExpense, onToggleExpense, onToggleCuota, onEditCuota }) {
+  const isInstallments = account.creditMode === 'cuotas'
+
+  if (!isInstallments) {
+    // Por valor: movimientos sin avatar, último agregado primero.
+    const movements = [...(account.expenses || []).filter((e) => e.installmentIndex == null)].reverse()
+    return (
+      <div className="acc-detail__list">
+        <section className="mov-section">
+          <div className="mov-section__head">
+            <h3 className="mov-section__title">Movimientos</h3>
+            <button type="button" className="acc-add acc-add--icon" onClick={onAdd} aria-label="Agregar movimiento">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </div>
+          {movements.length === 0 ? (
+            <p className="acc-list__empty">No hay movimientos.</p>
+          ) : (
+            <div className="mov-group__items">
+              {movements.map((e) => (
+                <AccountExpenseItem key={e.id} expense={e} onEdit={onEditExpense} hideIcon />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    )
+  }
+
+  // Por cuotas: cuotas y movimientos en una sola lista por fecha; pagadas al final.
+  const cuotas = installmentSchedule(account)
+  const movements = (account.expenses || []).filter((e) => e.installmentIndex == null)
+  const byDate = (a, b) => String(a.date || '').localeCompare(String(b.date || ''))
+  const active = [
+    ...cuotas.filter((c) => !c.paid).map((c) => ({ kind: 'cuota', date: c.date, cuota: c })),
+    ...movements.map((e) => ({ kind: 'mov', date: e.date, expense: e })),
+  ].sort(byDate)
+  const paid = cuotas
+    .filter((c) => c.paid)
+    .map((c) => ({ kind: 'cuota', date: c.date, cuota: c }))
+    .sort(byDate)
+  const rows = [...active, ...paid]
+
+  return (
+    <div className="acc-detail__list">
+      <section className="mov-section">
+        <div className="mov-section__head">
+          <h3 className="mov-section__title">Cuotas</h3>
+          <button type="button" className="acc-add acc-add--icon" onClick={onAdd} aria-label="Agregar movimiento">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        </div>
+        {rows.length === 0 ? (
+          <p className="acc-list__empty">No hay cuotas.</p>
+        ) : (
+          <div className="cuotas">
+            {rows.map((r) =>
+              r.kind === 'cuota' ? (
+                <CuotaRow key={`c-${r.cuota.id}`} cuota={r.cuota} onToggle={onToggleCuota} onEdit={onEditCuota} />
+              ) : (
+                <MovementRow key={`m-${r.expense.id}`} expense={r.expense} onToggle={onToggleExpense} onEdit={onEditExpense} />
+              ),
+            )}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
+export default function AccountDetail({ account, onBack, onEdit, onDelete, onAddExpense, onEditExpense, onToggleExpense, onToggleCuota, onEditCuota }) {
+  const isDebt = account.type === 'credito'
   const isNormal = account.type === 'normal'
   const canPend = isNormal && !!account.allowPending
   const defaultGroup = isNormal ? 'category' : 'none'
@@ -207,6 +340,7 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
   const setGroupBy = (v) => setPref(groupKey, v)
   const setOrderBy = (v) => setPref(orderKey, v)
   const [collapsed, setCollapsed] = useState({})
+  const [completedOpen, setCompletedOpen] = useState(false)
 
   const history = useMemo(() => last6MonthsHistory(account), [account])
 
@@ -228,10 +362,16 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
     () => groupExpenses(completed, groupBy, orderBy),
     [completed, groupBy, orderBy],
   )
-  const pendingGroups = useMemo(
-    () => groupExpenses(pending, 'none', orderBy),
-    [pending, orderBy],
+  // Completados en cuentas con pendientes: lista plana ordenada, sin encabezado ni borde de categoría.
+  const completedFlat = useMemo(
+    () => orderExpenses(completed, orderBy),
+    [completed, orderBy],
   )
+  const pendingGroups = useMemo(
+    () => groupExpenses(pending, groupBy, orderBy),
+    [pending, groupBy, orderBy],
+  )
+  const hasPending = canPend && pending.length > 0
 
   const toggle = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }))
 
@@ -276,45 +416,65 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
         </div>
 
         <div className="acc-detail__col acc-detail__col--right">
-          <div className="acc-detail__movhead">
-            <h2 className="acc-detail__movtitle">Movimientos</h2>
-            <button type="button" className="acc-add" onClick={onAddExpense} aria-label="Agregar movimiento">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              <span className="acc-add__label">Agregar</span>
-            </button>
-          </div>
-
-          <MovementsFilter
-            query={query}
-            onQuery={setQuery}
-            groupBy={groupBy}
-            onGroup={setGroupBy}
-            orderBy={orderBy}
-            onOrder={setOrderBy}
-            defaultGroup={defaultGroup}
-            onClear={() => {
-              setGroupBy(defaultGroup)
-              setOrderBy('newest')
-            }}
-          />
-
-          {filtered.length === 0 ? (
-            <p className="acc-list__empty">No hay movimientos.</p>
+          {isDebt ? (
+            <DebtView account={account} onAdd={onAddExpense} onEditExpense={onEditExpense} onToggleExpense={onToggleExpense} onToggleCuota={onToggleCuota} onEditCuota={onEditCuota} />
           ) : (
             <>
-              {canPend && pending.length > 0 && (
-                <section className="mov-section">
-                  <h3 className="mov-section__title">Pendientes</h3>
-                  <ExpenseGroups groups={pendingGroups} collapsed={collapsed} onToggle={toggle} onEdit={onEditExpense} />
-                </section>
-              )}
-              {completed.length > 0 && (
-                <section className="mov-section">
-                  {canPend && pending.length > 0 && <h3 className="mov-section__title">Completados</h3>}
-                  <ExpenseGroups groups={completedGroups} collapsed={collapsed} onToggle={toggle} onEdit={onEditExpense} />
-                </section>
+              <MovementsFilter
+                query={query}
+                onQuery={setQuery}
+                groupBy={groupBy}
+                onGroup={setGroupBy}
+                orderBy={orderBy}
+                onOrder={setOrderBy}
+                defaultGroup={defaultGroup}
+                onAdd={onAddExpense}
+                onClear={() => {
+                  setGroupBy(defaultGroup)
+                  setOrderBy('newest')
+                }}
+              />
+
+              {filtered.length === 0 ? (
+                <p className="acc-list__empty">No hay movimientos.</p>
+              ) : (
+                <div className="acc-detail__list">
+                  {hasPending && (
+                    <section className="mov-section">
+                      <h3 className="mov-section__title">Pendientes</h3>
+                      <ExpenseGroups groups={pendingGroups} collapsed={collapsed} onToggle={toggle} onEdit={onEditExpense} />
+                    </section>
+                  )}
+                  {completed.length > 0 && (hasPending ? (
+                    <section className="mov-section">
+                      <button
+                        type="button"
+                        className="mov-accordion__head"
+                        onClick={() => setCompletedOpen((o) => !o)}
+                      >
+                        <span className="mov-accordion__title">Completados</span>
+                        <span className="mov-accordion__count">{completed.length}</span>
+                        <svg
+                          className={`mov-group__chevron${completedOpen ? ' mov-group__chevron--open' : ''}`}
+                          viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        >
+                          <path d="M9 6l6 6-6 6" />
+                        </svg>
+                      </button>
+                      {completedOpen && (
+                        <div className="mov-group__items">
+                          {completedFlat.map((e) => (
+                            <AccountExpenseItem key={e.id} expense={e} onEdit={onEditExpense} />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  ) : (
+                    <section className="mov-section">
+                      <ExpenseGroups groups={completedGroups} collapsed={collapsed} onToggle={toggle} onEdit={onEditExpense} />
+                    </section>
+                  ))}
+                </div>
               )}
             </>
           )}

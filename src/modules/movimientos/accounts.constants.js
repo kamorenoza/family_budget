@@ -3,6 +3,7 @@
 export const ACCOUNT_TYPES = [
   { value: 'normal', label: 'Ahorros' },
   { value: 'TC', label: 'Tarjeta de crédito' },
+  { value: 'credito', label: 'Crédito' },
 ]
 
 // Etiqueta legible de un tipo de cuenta.

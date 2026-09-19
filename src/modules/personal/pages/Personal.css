@@ -100,6 +100,33 @@
   display: none;
 }
 
+/* Mobile: solo la lista de movimientos hace scroll (header, mes y resumen fijos). */
+@media (max-width: 959px) {
+  .app:has(.personal) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .app__main:has(.personal) {
+    height: 100%;
+    max-width: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .personal {
+    flex: 1;
+    min-height: 0;
+  }
+  .personal__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 12px;
+    margin-right: -12px;
+    padding-bottom: 80px;
+  }
+}
+
 /* ===== iPad / desktop: dos columnas ===== */
 @media (min-width: 960px) {
   .app__main:has(.personal) {

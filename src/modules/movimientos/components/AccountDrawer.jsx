@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
+import DateField from '../../../shared/components/DateField/DateField.jsx'
 import { ACCOUNT_TYPES } from '../accounts.constants'
 import '../../presupuesto/components/IncomeDrawer.css'
 import '../../presupuesto/components/ExpenseDrawer.css'
@@ -7,6 +8,24 @@ import '../../presupuesto/components/ExpenseDrawer.css'
 function formatThousands(raw) {
   const digits = String(raw).replace(/\D/g, '')
   return digits ? Number(digits).toLocaleString('es-CO') : ''
+}
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+// Genera el arreglo de cuotas (mensuales desde la primera fecha).
+function buildInstallments(count, value, firstDue) {
+  const parts = String(firstDue || '').slice(0, 10).split('-').map(Number)
+  const start = parts.length === 3 && parts[0] ? new Date(parts[0], parts[1] - 1, parts[2]) : null
+  const rows = []
+  for (let i = 0; i < count; i += 1) {
+    let date = ''
+    if (start && !Number.isNaN(start.getTime())) {
+      const d = new Date(start.getFullYear(), start.getMonth() + i, start.getDate())
+      date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    }
+    rows.push({ id: `c${i + 1}`, index: i + 1, date, value, paid: false })
+  }
+  return rows
 }
 
 // Restringe un día a 1..31.
@@ -27,6 +46,19 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
   const [creditLimit, setCreditLimit] = useState(account ? formatThousands(account.creditLimit) : '')
   const [cutoffDate, setCutoffDate] = useState(account?.cutoffDate ? String(account.cutoffDate) : '')
   const [dueDate, setDueDate] = useState(account?.dueDate ? String(account.dueDate) : '')
+  const [creditMode, setCreditMode] = useState(account?.creditMode || 'cuotas')
+  const [installmentsCount, setInstallmentsCount] = useState(
+    account?.installmentsCount ? String(account.installmentsCount) : '',
+  )
+  const [installmentValue, setInstallmentValue] = useState(
+    account?.installmentValue ? formatThousands(account.installmentValue) : '',
+  )
+  const [firstDueDate, setFirstDueDate] = useState(
+    account?.firstDueDate ? String(account.firstDueDate).slice(0, 10) : todayISO(),
+  )
+  const [debtValue, setDebtValue] = useState(
+    account?.debtValue ? formatThousands(account.debtValue) : '',
+  )
   const [error, setError] = useState('')
 
   const submit = () => {
@@ -40,6 +72,23 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
       data.creditLimit = limit
       data.cutoffDate = Number(cutoffDate)
       data.dueDate = Number(dueDate)
+    } else if (type === 'credito') {
+      data.creditMode = creditMode
+      if (creditMode === 'cuotas') {
+        const count = Number(String(installmentsCount).replace(/\D/g, ''))
+        const cval = Number(String(installmentValue).replace(/\D/g, ''))
+        if (!count || count <= 0) return setError('Indica cuántas cuotas.')
+        if (!cval || cval <= 0) return setError('Indica el valor de la cuota.')
+        if (!firstDueDate) return setError('Indica la fecha de la primera cuota.')
+        data.installmentsCount = count
+        data.installmentValue = cval
+        data.firstDueDate = firstDueDate
+        if (!editing) data.installments = buildInstallments(count, cval, firstDueDate)
+      } else {
+        const dval = Number(String(debtValue).replace(/\D/g, ''))
+        if (!dval || dval <= 0) return setError('Indica el valor de la deuda.')
+        data.debtValue = dval
+      }
     } else {
       data.allowPending = allowPending
     }
@@ -83,22 +132,19 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
 
         <div className="income-field">
           <p className="income-field__label">Tipo</p>
-          <div className="expense-tabs">
+          <select
+            className="income-field__input acc-drawer__select"
+            value={type}
+            disabled={editing}
+            onChange={(e) => {
+              setType(e.target.value)
+              setError('')
+            }}
+          >
             {ACCOUNT_TYPES.map((t) => (
-              <button
-                type="button"
-                key={t.value}
-                className={`expense-tab${type === t.value ? ' expense-tab--active' : ''}`}
-                disabled={editing}
-                onClick={() => {
-                  setType(t.value)
-                  setError('')
-                }}
-              >
-                {t.label}
-              </button>
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
-          </div>
+          </select>
         </div>
 
         {type === 'normal' && (
@@ -162,6 +208,108 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
                 />
               </div>
             </div>
+          </>
+        )}
+
+        {type === 'credito' && (
+          <>
+            <div className="income-field">
+              <p className="income-field__label">Modalidad</p>
+              <div className="expense-tabs">
+                <button
+                  type="button"
+                  className={`expense-tab${creditMode === 'cuotas' ? ' expense-tab--active' : ''}`}
+                  disabled={editing}
+                  onClick={() => {
+                    setCreditMode('cuotas')
+                    setError('')
+                  }}
+                >
+                  Por cuotas
+                </button>
+                <button
+                  type="button"
+                  className={`expense-tab${creditMode === 'valor' ? ' expense-tab--active' : ''}`}
+                  disabled={editing}
+                  onClick={() => {
+                    setCreditMode('valor')
+                    setError('')
+                  }}
+                >
+                  Por valor
+                </button>
+              </div>
+            </div>
+
+            {creditMode === 'cuotas' ? (
+              <>
+                <div className="acc-drawer__row">
+                  <div className="income-field">
+                    <label className="income-field__label" htmlFor="acc-count">N.º de cuotas</label>
+                    <input
+                      id="acc-count"
+                      type="text"
+                      inputMode="numeric"
+                      className="income-field__input"
+                      placeholder="0"
+                      value={installmentsCount}
+                      onChange={(e) => {
+                        setInstallmentsCount(e.target.value.replace(/\D/g, ''))
+                        setError('')
+                      }}
+                    />
+                  </div>
+                  <div className="income-field">
+                    <label className="income-field__label" htmlFor="acc-cuota">Valor cuota</label>
+                    <div className="income-field__prefixed">
+                      <span className="income-field__prefix">$</span>
+                      <input
+                        id="acc-cuota"
+                        type="text"
+                        inputMode="numeric"
+                        className="income-field__input income-field__input--prefixed"
+                        placeholder="0"
+                        value={installmentValue}
+                        onChange={(e) => {
+                          setInstallmentValue(formatThousands(e.target.value))
+                          setError('')
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="income-field">
+                  <label className="income-field__label" htmlFor="acc-first-due">Fecha primera cuota</label>
+                  <DateField
+                    id="acc-first-due"
+                    value={firstDueDate}
+                    onChange={(e) => {
+                      setFirstDueDate(e.target.value)
+                      setError('')
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="income-field">
+                <label className="income-field__label" htmlFor="acc-debt">Valor de la deuda</label>
+                <div className="income-field__prefixed">
+                  <span className="income-field__prefix">$</span>
+                  <input
+                    id="acc-debt"
+                    type="text"
+                    inputMode="numeric"
+                    className="income-field__input income-field__input--prefixed"
+                    placeholder="0"
+                    value={debtValue}
+                    onChange={(e) => {
+                      setDebtValue(formatThousands(e.target.value))
+                      setError('')
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </>
         )}
 

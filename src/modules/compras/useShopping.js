@@ -78,14 +78,14 @@ export function useShopping() {
   const addItem = useCallback((list, item) => {
     const next = [
       ...(list.items || []),
-      { id: generateId(), name: item.name.trim(), amount: item.amount, checked: false, checkedAt: null },
+      { id: generateId(), name: item.name.trim(), amount: item.amount, group: item.group || null, checked: false, checkedAt: null },
     ]
     saveShoppingItems(list.id, next)
   }, [])
 
   const updateItem = useCallback((list, item) => {
     const next = (list.items || []).map((i) =>
-      i.id === item.id ? { ...i, name: item.name.trim(), amount: item.amount } : i,
+      i.id === item.id ? { ...i, name: item.name.trim(), amount: item.amount, group: item.group || null } : i,
     )
     saveShoppingItems(list.id, next)
   }, [])

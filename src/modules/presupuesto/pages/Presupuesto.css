@@ -269,8 +269,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border: none;
   border-radius: 10px;
   background: #fff;
@@ -316,10 +316,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -353,10 +353,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -416,12 +416,28 @@
   top: calc(100% + 6px);
   right: 0;
   z-index: 20;
-  min-width: 270px;
+  width: min(270px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
   padding: var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: #fff;
   box-shadow: var(--shadow-lg);
+}
+
+/* En pantallas angostas el menú se ancla al borde derecho de la barra de acciones
+   (no al botón de filtro que queda al centro) para que nunca se salga de la pantalla. */
+@media (max-width: 699px) {
+  .tx-section__actions {
+    position: relative;
+  }
+  .tx-filter {
+    position: static;
+  }
+  .tx-filter__menu {
+    right: 0;
+    left: auto;
+  }
 }
 
 .tx-filter__search {
@@ -665,6 +681,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .bolsillo__line {

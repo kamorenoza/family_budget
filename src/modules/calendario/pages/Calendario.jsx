@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './Calendario.css'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 import MonthSelector from '../../../shared/components/MonthSelector/MonthSelector.jsx'
 import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import IncomeDrawer from '../../presupuesto/components/IncomeDrawer.jsx'
@@ -7,6 +8,7 @@ import ExpenseDrawer from '../../presupuesto/components/ExpenseDrawer.jsx'
 import IncomeDeleteDialog from '../../presupuesto/components/IncomeDeleteDialog.jsx'
 import EditScopeDialog from '../../presupuesto/components/EditScopeDialog.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
+import { loadPeriod, savePeriod } from '../../../shared/utils/period'
 import {
   MONTHS,
   WEEKDAYS,
@@ -361,9 +363,7 @@ function MemberFilter({ members, selected, status, onToggle, onStatus, onClear }
         onClick={() => setOpen((v) => !v)}
         aria-label="Filtrar"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
+        <FilterIcon size={18} />
         <span className="cal__filter-btn-label">Filtrar</span>
       </button>
       {open && (
@@ -423,7 +423,7 @@ function MemberFilter({ members, selected, status, onToggle, onStatus, onClear }
 
 export default function Calendario() {
   const now = new Date()
-  const [period, setPeriod] = useState({ month: now.getMonth(), year: now.getFullYear() })
+  const [period, setPeriod] = useState(loadPeriod)
   const isMobile = useIsMobile()
   const { user } = useAuth()
   const { members } = useMembers(user)
@@ -690,7 +690,7 @@ export default function Calendario() {
       <header className="cal__header">
         <h1 className="cal__title">Calendario</h1>
         <div className="cal__controls">
-          <MonthSelector onChange={(month, year) => setPeriod({ month, year })} />
+          <MonthSelector initialMonth={period.month} initialYear={period.year} onChange={(month, year) => { setPeriod({ month, year }); savePeriod({ month, year }) }} />
           <MemberFilter
             members={members}
             selected={filterEmails}

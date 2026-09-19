@@ -44,3 +44,8 @@ export function deleteAccount(id) {
 export function saveAccountExpenses(id, expenses) {
   return updateDoc(doc(db, ACCOUNTS, id), { expenses })
 }
+
+// Reemplaza el arreglo de cuotas de una cuenta de crédito.
+export function saveAccountInstallments(id, installments) {
+  return updateDoc(doc(db, ACCOUNTS, id), { installments })
+}

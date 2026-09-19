@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './Presupuesto.css'
+import SearchIcon from '../../../shared/components/icons/SearchIcon.jsx'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 import MonthSelector from '../../../shared/components/MonthSelector/MonthSelector.jsx'
 import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import IncomeDrawer from '../components/IncomeDrawer.jsx'
@@ -16,6 +18,7 @@ import { useExpenses } from '../useExpenses'
 import { useCategories } from '../../categories/useCategories'
 import { ExpenseItem, BolsilloAccordion, CategoryAccordion, IncomeItem } from '../components/TxItems.jsx'
 import { formatCurrency, dayOfDate, fullDateLabel, monthKeyOf, applyMonthOverride } from '../presupuesto.utils'
+import { loadPeriod, savePeriod } from '../../../shared/utils/period'
 import UserIcon from '../../../shared/components/icons/UserIcon.jsx'
 
 export default function Presupuesto() {
@@ -54,8 +57,7 @@ export default function Presupuesto() {
   const [reorderMode, setReorderMode] = useState(false)
   const [expenseQuery, setExpenseQuery] = useState('')
   const filterRef = useRef(null)
-  const now = new Date()
-  const [period, setPeriod] = useState({ month: now.getMonth(), year: now.getFullYear() })
+  const [period, setPeriod] = useState(loadPeriod)
 
   const monthKey = monthKeyOf(period.month, period.year)
 
@@ -429,13 +431,20 @@ export default function Presupuesto() {
       setExpenseDeleteOpen(true)
       return
     }
+    const isBolsillo = exp.kind === 'bolsillo'
+    const children = isBolsillo
+      ? expenses.filter((e) => e.sourceType === 'bolsillo' && e.bolsilloId === exp.id)
+      : []
     const ok = await confirm({
-      title: '¿Eliminar gasto?',
-      message: `Se eliminará "${exp.description}". Esta acción no se puede deshacer.`,
+      title: isBolsillo ? '¿Eliminar bolsillo?' : '¿Eliminar gasto?',
+      message: isBolsillo
+        ? `Se eliminará "${exp.description}"${children.length ? ` y sus ${children.length} gasto(s) asociados` : ''}. Esta acción no se puede deshacer.`
+        : `Se eliminará "${exp.description}". Esta acción no se puede deshacer.`,
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
     })
     if (!ok) return
+    children.forEach((c) => deleteExpense(c))
     deleteExpense(exp)
     closeExpense()
   }
@@ -471,7 +480,7 @@ export default function Presupuesto() {
       </header>
 
       <div className="presupuesto__side">
-      <MonthSelector onChange={(month, year) => setPeriod({ month, year })} />
+      <MonthSelector initialMonth={period.month} initialYear={period.year} onChange={(month, year) => { setPeriod({ month, year }); savePeriod({ month, year }) }} />
       <article className="card summary-card">
         <div className="summary-card__head">
           <span className="summary-card__icon" aria-hidden="true">
@@ -556,10 +565,7 @@ export default function Presupuesto() {
 
       <div className="presupuesto__scroll">
         <div className="tx-search">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
+          <SearchIcon size={16} />
           <input
             type="text"
             className="tx-search__input"
@@ -627,18 +633,13 @@ export default function Presupuesto() {
                   onClick={() => setFilterOpen((o) => !o)}
                   aria-label="Ordenar"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 6h18M6 12h12M10 18h4" />
-                  </svg>
+                  <FilterIcon size={18} />
                   <span className="tx-filter__btn-label">Ordenar</span>
                 </button>
                 {filterOpen && (
                   <div className="tx-filter__menu">
                     <div className="tx-filter__search">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="M21 21l-4.3-4.3" />
-                      </svg>
+                      <SearchIcon size={16} />
                       <input
                         type="text"
                         className="tx-filter__search-input"
@@ -688,7 +689,7 @@ export default function Presupuesto() {
                   onClick={toggleReorder}
                   aria-label={reorderMode ? 'Listo' : 'Reordenar'}
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                     {reorderMode ? (
                       <path d="M5 12l5 5L20 7" />
                     ) : (

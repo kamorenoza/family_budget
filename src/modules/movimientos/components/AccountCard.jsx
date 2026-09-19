@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatCurrency } from '../../presupuesto/presupuesto.utils'
+import { CategoryGlyph } from '../../categories/categories.constants'
 import { accountTypeLabel } from '../accounts.constants'
-import { savingsBalance, savingsRealBalance, creditUsed, creditFree } from '../accounts.utils'
+import {
+  savingsBalance,
+  savingsRealBalance,
+  creditUsed,
+  creditFree,
+  debtBalance,
+  debtPaidInstallments,
+  debtPendingInstallments,
+} from '../accounts.utils'
 
 // Menú de tres puntos con Editar / Eliminar.
-function DotMenu({ onEdit, onDelete }) {
+export function DotMenu({ onEdit, onDelete }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -109,7 +118,8 @@ const CreditCardIcon = () => (
 
 export default function AccountCard({ account, onOpen, onEdit, onDelete, showMenu = true }) {
   const isCredit = account.type === 'TC'
-  const modifier = isCredit ? 'acc-card--credit' : 'acc-card--savings'
+  const isDebt = account.type === 'credito'
+  const modifier = isDebt ? 'acc-card--debt' : isCredit ? 'acc-card--credit' : 'acc-card--savings'
 
   return (
     <article
@@ -122,7 +132,9 @@ export default function AccountCard({ account, onOpen, onEdit, onDelete, showMen
       }}
     >
       <div className="acc-card__top">
-        <span className="acc-card__icon">{isCredit ? <CreditCardIcon /> : <SuitcaseIcon />}</span>
+        <span className="acc-card__icon">
+          {isDebt ? <CategoryGlyph name="cat30" color="#fff" size={24} /> : isCredit ? <CreditCardIcon /> : <SuitcaseIcon />}
+        </span>
         <div className="acc-card__titles">
           <p className="acc-card__name">{account.name}</p>
           <p className="acc-card__type">{accountTypeLabel(account.type)}</p>
@@ -130,7 +142,26 @@ export default function AccountCard({ account, onOpen, onEdit, onDelete, showMen
         {showMenu && <DotMenu onEdit={onEdit} onDelete={onDelete} />}
       </div>
 
-      {isCredit ? (
+      {isDebt ? (
+        <>
+          <div className="acc-card__balance">
+            <span className="acc-card__balance-label">Saldo</span>
+            <span className="acc-card__balance-value">{formatCurrency(debtBalance(account))}</span>
+          </div>
+          {account.creditMode === 'cuotas' && (
+            <div className="acc-card__grid">
+              <div className="acc-card__stat">
+                <span className="acc-card__stat-label">Cuotas pendientes</span>
+                <span className="acc-card__stat-value">{debtPendingInstallments(account)}</span>
+              </div>
+              <div className="acc-card__stat">
+                <span className="acc-card__stat-label">Cuotas pagadas</span>
+                <span className="acc-card__stat-value">{debtPaidInstallments(account)}</span>
+              </div>
+            </div>
+          )}
+        </>
+      ) : isCredit ? (
         <>
           <div className="acc-card__balance">
             <span className="acc-card__balance-label">Saldo</span>

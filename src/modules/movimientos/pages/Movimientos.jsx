@@ -7,10 +7,11 @@ import AccountsList from '../components/AccountsList.jsx'
 import AccountDetail from '../components/AccountDetail.jsx'
 import AccountDrawer from '../components/AccountDrawer.jsx'
 import AccountExpenseDrawer from '../components/AccountExpenseDrawer.jsx'
+import CuotaDrawer from '../components/CuotaDrawer.jsx'
 import '../components/Movimientos.css'
 
 export default function Movimientos() {
-  const { accounts, myEmail, addAccount, updateAccount, deleteAccount, addExpense, updateExpense, deleteExpense } = useAccounts()
+  const { accounts, myEmail, addAccount, updateAccount, deleteAccount, addExpense, updateExpense, deleteExpense, setCuotaPaid, updateCuota, deleteCuota } = useAccounts()
   const { categories } = useCategories()
 
   const [selectedId, setSelectedId] = useState(null)
@@ -19,6 +20,7 @@ export default function Movimientos() {
   const [editingAccount, setEditingAccount] = useState(null)
   const [expenseDrawer, setExpenseDrawer] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
+  const [editingCuota, setEditingCuota] = useState(null)
 
   const selected = useMemo(
     () => accounts.find((a) => a.id === selectedId) || null,
@@ -114,6 +116,39 @@ export default function Movimientos() {
     closeExpenseDrawer()
   }
 
+  // Marca/desmarca un movimiento (check en modo cuotas).
+  const toggleExpensePaid = (expense, checked) => {
+    if (!selected) return
+    updateExpense(selected, { ...expense, paid: checked })
+  }
+
+  // Marca/desmarca una cuota como pagada.
+  const toggleCuota = (cuota, checked) => {
+    if (!selected) return
+    setCuotaPaid(selected, cuota, checked)
+  }
+
+  const openEditCuota = (cuota) => setEditingCuota(cuota)
+  const closeCuotaDrawer = () => setEditingCuota(null)
+
+  const submitCuota = (data) => {
+    if (!selected || !editingCuota) return
+    updateCuota(selected, editingCuota, data)
+  }
+
+  const removeCuota = async () => {
+    if (!selected || !editingCuota) return
+    const ok = await confirm({
+      title: 'Eliminar cuota',
+      message: `¿Eliminar la cuota ${editingCuota.index} del plan?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+    })
+    if (!ok) return
+    deleteCuota(selected, editingCuota.id)
+    closeCuotaDrawer()
+  }
+
   return (
     <section className="movimientos">
       {selected ? (
@@ -124,6 +159,9 @@ export default function Movimientos() {
           onDelete={removeAccount}
           onAddExpense={openAddExpense}
           onEditExpense={openEditExpense}
+          onToggleExpense={toggleExpensePaid}
+          onToggleCuota={toggleCuota}
+          onEditCuota={openEditCuota}
         />
       ) : (
         <AccountsList
@@ -156,6 +194,17 @@ export default function Movimientos() {
             onSubmit={submitExpense}
             onDelete={removeExpense}
             onClose={closeExpenseDrawer}
+          />
+        )}
+      </SideDrawer>
+
+      <SideDrawer open={!!editingCuota} onClose={closeCuotaDrawer} title="Cuota">
+        {editingCuota && (
+          <CuotaDrawer
+            cuota={editingCuota}
+            onSubmit={submitCuota}
+            onDelete={removeCuota}
+            onClose={closeCuotaDrawer}
           />
         )}
       </SideDrawer>

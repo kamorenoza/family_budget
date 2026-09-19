@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import './Personal.css'
 import '../../presupuesto/pages/Presupuesto.css'
+import SearchIcon from '../../../shared/components/icons/SearchIcon.jsx'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 import MonthSelector from '../../../shared/components/MonthSelector/MonthSelector.jsx'
 import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import IncomeDrawer from '../../presupuesto/components/IncomeDrawer.jsx'
@@ -10,6 +12,7 @@ import EditScopeDialog from '../../presupuesto/components/EditScopeDialog.jsx'
 import { ExpenseItem, BolsilloAccordion, CategoryAccordion, IncomeItem } from '../../presupuesto/components/TxItems.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import { useAuth } from '../../../shared/context/AuthContext.jsx'
+import { loadPeriod, savePeriod } from '../../../shared/utils/period'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
 import { useDragOrder } from '../../../shared/hooks/useDragOrder'
 import { useMembers } from '../../settings/useMembers'
@@ -63,7 +66,7 @@ export default function Personal() {
   const [expenseQuery, setExpenseQuery] = useState('')
   const filterRef = useRef(null)
   const now = new Date()
-  const [period, setPeriod] = useState({ month: now.getMonth(), year: now.getFullYear() })
+  const [period, setPeriod] = useState(loadPeriod)
 
   const monthKey = monthKeyOf(period.month, period.year)
   const email = user?.email
@@ -174,15 +177,33 @@ export default function Personal() {
   })
   // Dentro de cada categoría, los gastos se ordenan con el mismo criterio elegido.
   const orderItems = (arr) => sortExpensesBy(arr)
-  const saveCatOrder = (ids) => {
-    const prev = prefs.personalCategoryOrder || []
-    const seen = new Set(ids)
-    setPref('personalCategoryOrder', [...ids, ...prev.filter((id) => !seen.has(id))])
-  }
-  const { order: catDragOrder, dragPropsFor: catDragPropsFor } = useDragOrder(catIds, saveCatOrder, {
-    attr: 'data-cat-id',
+
+  // En modo agrupado, categorías y bolsillos comparten un mismo orden para poder intercalarlos.
+  const groupBlocks = [
+    ...catIds.map((id) => ({ type: 'cat', key: `cat:${id}`, id })),
+    ...groupBolsillos.map((tx) => ({ type: 'bol', key: `bol:${tx.id}`, tx })),
+  ]
+  const blockOrderPref = prefs.personalGroupOrder || []
+  const sortedBlocks = [...groupBlocks].sort((a, b) => {
+    const ia = blockOrderPref.indexOf(a.key)
+    const ib = blockOrderPref.indexOf(b.key)
+    const na = ia === -1 ? Infinity : ia
+    const nb = ib === -1 ? Infinity : ib
+    if (na !== nb) return na - nb
+    return 0
   })
-  const renderCatIds = reorderMode ? catDragOrder.filter((id) => byCat.has(id)) : catIds
+  const saveBlockOrder = (keys) => {
+    const prev = prefs.personalGroupOrder || []
+    const seen = new Set(keys)
+    setPref('personalGroupOrder', [...keys, ...prev.filter((k) => !seen.has(k))])
+  }
+  const { order: blockOrder, dragPropsFor: blockDragPropsFor } = useDragOrder(
+    sortedBlocks.map((b) => b.key),
+    saveBlockOrder,
+    { attr: 'data-block-id' },
+  )
+  const blockByKey = new Map(groupBlocks.map((b) => [b.key, b]))
+  const renderBlocks = reorderMode ? blockOrder.map((k) => blockByKey.get(k)).filter(Boolean) : sortedBlocks
 
   // Cambia el criterio de orden; avisa si se perderá el orden personalizado.
   const changeSort = async (value) => {
@@ -372,13 +393,20 @@ export default function Personal() {
       setExpenseDeleteOpen(true)
       return
     }
+    const isBolsillo = exp.kind === 'bolsillo'
+    const children = isBolsillo
+      ? expenses.filter((e) => e.sourceType === 'bolsillo' && e.bolsilloId === exp.id)
+      : []
     const ok = await confirm({
-      title: '¿Eliminar gasto?',
-      message: `Se eliminará "${exp.description}". Esta acción no se puede deshacer.`,
+      title: isBolsillo ? '¿Eliminar bolsillo?' : '¿Eliminar gasto?',
+      message: isBolsillo
+        ? `Se eliminará "${exp.description}"${children.length ? ` y sus ${children.length} gasto(s) asociados` : ''}. Esta acción no se puede deshacer.`
+        : `Se eliminará "${exp.description}". Esta acción no se puede deshacer.`,
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
     })
     if (!ok) return
+    children.forEach((c) => deleteExpense(c))
     deleteExpense(exp)
     closeExpense()
   }
@@ -413,7 +441,7 @@ export default function Personal() {
       </header>
 
       <div className="personal__side">
-      <MonthSelector onChange={(month, year) => setPeriod({ month, year })} />
+      <MonthSelector initialMonth={period.month} initialYear={period.year} onChange={(month, year) => { setPeriod({ month, year }); savePeriod({ month, year }) }} />
       <article className="card personal-summary">
         <div className="personal-summary__top">
           <p className="personal-summary__label">Disponible</p>
@@ -436,10 +464,7 @@ export default function Personal() {
 
       <div className="personal__scroll">
         <div className="tx-search">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
+          <SearchIcon size={16} />
           <input
             type="text"
             className="tx-search__input"
@@ -468,7 +493,7 @@ export default function Personal() {
             onClick={openNewIncome}
             aria-label="Agregar ingreso"
           >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
             <span className="tx-section__add-label">Agregar ingreso</span>
@@ -508,18 +533,13 @@ export default function Personal() {
                 onClick={() => setFilterOpen((o) => !o)}
                 aria-label="Ordenar"
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18M6 12h12M10 18h4" />
-                </svg>
+                <FilterIcon size={18} />
                 <span className="tx-filter__btn-label">Ordenar</span>
               </button>
               {filterOpen && (
                 <div className="tx-filter__menu">
                   <div className="tx-filter__search">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="7" />
-                      <path d="M21 21l-4.3-4.3" />
-                    </svg>
+                    <SearchIcon size={16} />
                     <input
                       type="text"
                       className="tx-filter__search-input"
@@ -569,7 +589,7 @@ export default function Personal() {
                 onClick={toggleReorder}
                 aria-label={reorderMode ? 'Listo' : 'Reordenar'}
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                   {reorderMode ? (
                     <path d="M5 12l5 5L20 7" />
                   ) : (
@@ -585,7 +605,7 @@ export default function Personal() {
               onClick={openNewExpense}
               aria-label="Agregar gasto"
             >
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
               <span className="tx-section__add-label">Agregar gasto</span>
@@ -599,39 +619,39 @@ export default function Personal() {
             <p className="tx-empty">Sin resultados para “{expenseQuery}”.</p>
           ) : groupMode ? (
             <>
-              {renderCatIds.map((catId) => (
-                <CategoryAccordion
-                  key={catId}
-                  category={catId === 'sin' ? null : categoryOf(catId)}
-                  expenses={orderItems(byCat.get(catId) || [])}
-                  onToggle={handleTogglePaid}
-                  onEdit={openEditExpense}
-                  dateLabelOf={(e) => fullDateLabel(dayOfDate(e.date), period.month, period.year)}
-                  sourceOf={() => null}
-                  dragMode={reorderMode}
-                  dragProps={reorderMode ? catDragPropsFor(catId) : null}
-                  itemDragMode={reorderMode}
-                  itemDragPropsFor={dragPropsFor}
-                />
-              ))}
-              {groupBolsillos.map((tx) => {
-                const childExpenses = myExpenses.filter(
-                  (e) => e.sourceType === 'bolsillo' && e.bolsilloId === tx.id,
-                )
-                return (
+              {renderBlocks.map((block) =>
+                block.type === 'cat' ? (
+                  <CategoryAccordion
+                    key={block.key}
+                    category={block.id === 'sin' ? null : categoryOf(block.id)}
+                    expenses={orderItems(byCat.get(block.id) || [])}
+                    onToggle={handleTogglePaid}
+                    onEdit={openEditExpense}
+                    dateLabelOf={(e) => fullDateLabel(dayOfDate(e.date), period.month, period.year)}
+                    sourceOf={() => null}
+                    dragMode={reorderMode}
+                    dragProps={reorderMode ? blockDragPropsFor(block.key) : null}
+                    itemDragMode={reorderMode}
+                    itemDragPropsFor={dragPropsFor}
+                  />
+                ) : (
                   <BolsilloAccordion
-                    key={tx.id}
-                    tx={tx}
-                    used={usedByBolsillo[tx.id] || 0}
-                    childExpenses={childExpenses}
+                    key={block.key}
+                    tx={block.tx}
+                    used={usedByBolsillo[block.tx.id] || 0}
+                    childExpenses={myExpenses.filter(
+                      (e) => e.sourceType === 'bolsillo' && e.bolsilloId === block.tx.id,
+                    )}
                     categoryOf={categoryOf}
                     source={null}
                     dateLabelOf={(c) => fullDateLabel(dayOfDate(c.date), period.month, period.year)}
                     onToggle={handleTogglePaid}
                     onEdit={openEditExpense}
+                    dragMode={reorderMode}
+                    dragProps={reorderMode ? blockDragPropsFor(block.key) : null}
                   />
-                )
-              })}
+                ),
+              )}
             </>
           ) : (
             renderExpenses.map((tx) => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ACCOUNT_TYPES, ACCOUNTS_ORDER_BY } from '../accounts.constants'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 
 // Barra de búsqueda + menú de filtro (tipo y orden) para la lista de cuentas.
 export default function AccountsFilter({ query, onQuery, typeFilter, onType, sortBy, onSort, onClear }) {
@@ -26,9 +27,7 @@ export default function AccountsFilter({ query, onQuery, typeFilter, onType, sor
           onClick={() => setOpen((v) => !v)}
           aria-label="Filtrar"
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 5h18M6 12h12M10 19h4" />
-          </svg>
+          <FilterIcon size={18} />
           <span className="acc-filter__btn-label">Filtros</span>
         </button>
 

@@ -7,7 +7,9 @@ import {
   updateAccount as updateAccountDoc,
   deleteAccount as deleteAccountDoc,
   saveAccountExpenses,
+  saveAccountInstallments,
 } from './servicios/accountsService'
+import { getInstallments } from './accounts.utils'
 
 // Genera un id local para los movimientos anidados.
 function generateId() {
@@ -77,5 +79,33 @@ export function useAccounts() {
     saveAccountExpenses(account.id, list)
   }, [])
 
-  return { accounts, myEmail, addAccount, updateAccount, deleteAccount, addExpense, updateExpense, deleteExpense }
+  // Cuotas de crédito: marcar pagada, editar (monto/fecha) o eliminar del plan.
+  const setCuotaPaid = useCallback((account, cuota, paid) => {
+    const list = getInstallments(account).map((c) => (c.id === cuota.id ? { ...c, paid } : c))
+    saveAccountInstallments(account.id, list)
+  }, [])
+
+  const updateCuota = useCallback((account, cuota, data) => {
+    const list = getInstallments(account).map((c) => (c.id === cuota.id ? { ...c, ...data } : c))
+    saveAccountInstallments(account.id, list)
+  }, [])
+
+  const deleteCuota = useCallback((account, cuotaId) => {
+    const list = getInstallments(account).filter((c) => c.id !== cuotaId)
+    saveAccountInstallments(account.id, list)
+  }, [])
+
+  return {
+    accounts,
+    myEmail,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    setCuotaPaid,
+    updateCuota,
+    deleteCuota,
+  }
 }

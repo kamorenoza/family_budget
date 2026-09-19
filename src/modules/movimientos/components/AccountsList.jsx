@@ -70,7 +70,7 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
             }}
           />
           <button type="button" className="acc-add" onClick={onAdd} aria-label="Agregar cuenta">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
             <span className="acc-add__label">Agregar</span>
@@ -83,7 +83,7 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
           {accounts.length === 0 ? 'Aún no tienes cuentas' : 'No hay cuentas que coincidan.'}
         </p>
       ) : (
-        <div className="acc-list__grid">
+        <div className="acc-list__grid" key={scope}>
           {visible.map((account) => (
             <AccountCard
               key={account.id}

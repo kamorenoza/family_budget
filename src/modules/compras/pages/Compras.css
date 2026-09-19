@@ -61,11 +61,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 36px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: var(--color-primary-light);
   color: var(--color-primary);
   font-size: 0.82rem;
@@ -241,12 +241,17 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--radius-md);
-  width: 34px;
-  height: 34px;
+  border-radius: 10px;
+  width: 35px;
+  height: 35px;
   flex-shrink: 0;
   cursor: pointer;
   transition: filter var(--transition-fast);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .shop-detail__act:hover {
@@ -467,8 +472,47 @@
 .shop-detail__items-head {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-sm);
+}
+
+/* Barra de búsqueda (igual estilo que en cuentas) */
+.shop-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px var(--space-sm);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-text-secondary);
+}
+
+.shop-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.shop-search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .shop-detail__items-title {
@@ -508,10 +552,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 35px;
+  height: 35px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: color-mix(in srgb, #8971ad 16%, #fff);
   color: #8971ad;
   cursor: pointer;
@@ -520,6 +564,91 @@
 
 .shop-detail__add:hover {
   background: color-mix(in srgb, #8971ad 26%, #fff);
+}
+
+.shop-detail__add svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Grupos de artículos */
+.shop-group {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-xs);
+}
+
+.shop-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 12px 4px 4px;
+}
+
+.shop-group__handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.shop-group__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Caja de 30px para alinear la flecha con el menú (3 puntos) de los artículos. */
+.shop-group__chev-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.shop-group__chev {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.shop-group__chev--closed {
+  transform: rotate(-90deg);
+}
+
+.shop-group__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+}
+
+.shop-group__count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.shop-group__items {
+  display: flex;
+  flex-direction: column;
 }
 
 .shop-detail__items {
@@ -601,9 +730,9 @@
   border: none;
   background: var(--color-primary-light);
   color: var(--color-primary);
-  border-radius: var(--radius-md);
-  width: 32px;
-  height: 32px;
+  border-radius: 10px;
+  width: 35px;
+  height: 35px;
   flex-shrink: 0;
   cursor: pointer;
   transition: filter var(--transition-fast);
@@ -662,13 +791,6 @@
   }
 
   /* Botones con label dentro de la lista */
-  .shop-detail__reorder,
-  .shop-detail__add {
-    width: auto;
-    gap: 6px;
-    padding: 0 14px;
-  }
-
   .shop-detail__act {
     width: auto;
     gap: 6px;

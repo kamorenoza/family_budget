@@ -8,16 +8,17 @@ function formatThousands(raw) {
 }
 
 // Formulario para crear o editar un artículo de la lista.
-export default function ShoppingItemDrawer({ item, onSubmit, onDelete, onClose }) {
+export default function ShoppingItemDrawer({ item, groups = [], onSubmit, onDelete, onClose }) {
   const editing = !!item
   const [name, setName] = useState(item?.name || '')
   const [value, setValue] = useState(item ? formatThousands(item.amount) : '')
+  const [group, setGroup] = useState(item?.group || '')
   const [error, setError] = useState('')
 
   const submit = () => {
     if (!name.trim()) return setError('Escribe un nombre.')
     const amount = Number(String(value).replace(/\D/g, '')) || 0
-    onSubmit({ id: item?.id, name, amount })
+    onSubmit({ id: item?.id, name, amount, group: group.trim() || null })
     onClose()
   }
 
@@ -61,6 +62,26 @@ export default function ShoppingItemDrawer({ item, onSubmit, onDelete, onClose }
               }}
             />
           </div>
+        </div>
+
+        <div className="income-field">
+          <label className="income-field__label" htmlFor="item-group">Grupo (opcional)</label>
+          <input
+            id="item-group"
+            type="text"
+            className="income-field__input"
+            placeholder="Ej. Frutas"
+            list="shop-item-groups"
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+          />
+          {groups.length > 0 && (
+            <datalist id="shop-item-groups">
+              {groups.map((g) => (
+                <option key={g} value={g} />
+              ))}
+            </datalist>
+          )}
         </div>
 
         {error && <p className="income-drawer__error">{error}</p>}
