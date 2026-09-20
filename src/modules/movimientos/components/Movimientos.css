@@ -136,6 +136,32 @@
   background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
 }
 
+/* Botón para activar el modo reordenar cuentas. */
+.acc-reorder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.acc-reorder:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 22%, #fff);
+}
+
+.acc-reorder--on {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 /* En la fila de filtros el botón agregar es solo icono (no crece con label). */
 .acc-add--icon {
   width: 35px;
@@ -171,6 +197,8 @@
   min-height: 0;
   overflow-y: auto;
   padding-bottom: 70px;
+      margin-right: -16px;
+    padding-right: 16px;
 }
 
 @media (min-width: 700px) {
@@ -209,6 +237,27 @@
 
 .acc-card--credit {
   background: #f4ede7;
+}
+
+/* Modo reordenar: asa de arrastre en la esquina. */
+.acc-card--drag {
+  position: relative;
+  cursor: grab;
+}
+
+.acc-card__drag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--color-text-secondary);
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
 }
 
 .acc-card__top {
@@ -305,6 +354,7 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
+  color: var(--color-text);
 }
 
 .acc-card__menu-list svg {
@@ -1019,6 +1069,7 @@
   background: none;
   cursor: pointer;
   text-align: left;
+  color: var(--color-text);
 }
 
 .cuota-row__info {

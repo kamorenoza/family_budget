@@ -116,21 +116,35 @@ const CreditCardIcon = () => (
   </svg>
 )
 
-export default function AccountCard({ account, onOpen, onEdit, onDelete, showMenu = true }) {
+export default function AccountCard({ account, onOpen, onEdit, onDelete, showMenu = true, dragMode = false, dragProps }) {
+  const { handleProps, ...rowProps } = dragProps || {}
   const isCredit = account.type === 'TC'
   const isDebt = account.type === 'credito'
   const modifier = isDebt ? 'acc-card--debt' : isCredit ? 'acc-card--credit' : 'acc-card--savings'
 
   return (
     <article
-      className={`acc-card ${modifier}`}
-      onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
+      className={`acc-card ${modifier}${dragMode ? ' acc-card--drag' : ''}`}
+      onClick={dragMode ? undefined : onOpen}
+      role={dragMode ? undefined : 'button'}
+      tabIndex={dragMode ? undefined : 0}
+      onKeyDown={dragMode ? undefined : (e) => {
         if (e.key === 'Enter') onOpen?.()
       }}
+      {...(dragMode ? rowProps : {})}
     >
+      {dragMode && (
+        <span className="acc-card__drag" aria-hidden="true" {...(handleProps || {})}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <circle cx="9" cy="6" r="1.6" />
+            <circle cx="15" cy="6" r="1.6" />
+            <circle cx="9" cy="12" r="1.6" />
+            <circle cx="15" cy="12" r="1.6" />
+            <circle cx="9" cy="18" r="1.6" />
+            <circle cx="15" cy="18" r="1.6" />
+          </svg>
+        </span>
+      )}
       <div className="acc-card__top">
         <span className="acc-card__icon">
           {isDebt ? <CategoryGlyph name="cat30" color="#fff" size={24} /> : isCredit ? <CreditCardIcon /> : <SuitcaseIcon />}

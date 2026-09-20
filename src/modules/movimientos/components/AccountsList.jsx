@@ -4,18 +4,27 @@ import AccountsFilter from './AccountsFilter.jsx'
 import { accountTypeLabel } from '../accounts.constants'
 import { useUserPrefs } from '../../../shared/hooks/useUserPrefs'
 import { useFamilyPrefs } from '../../../shared/hooks/useFamilyPrefs'
+import { useDragOrder } from '../../../shared/hooks/useDragOrder'
 
 export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit, onDelete, onAdd }) {
   const [query, setQuery] = useState('')
+  const [reorderMode, setReorderMode] = useState(false)
   // Cuentas familiares: preferencia compartida. Personales: propia de cada usuario.
   const userPrefs = useUserPrefs()
   const familyPrefs = useFamilyPrefs()
   const { prefs, setPref } = scope === 'family' ? familyPrefs : userPrefs
   const typeFilter = prefs.accTypeFilter ?? 'all'
   const sortBy = prefs.accSortBy ?? 'name'
+  const accOrder = prefs.accOrder || []
   const setTypeFilter = (v) => setPref('accTypeFilter', v)
-  const setSortBy = (v) => setPref('accSortBy', v)
+  // Al cambiar el orden manual queda sin efecto para respetar el criterio elegido.
+  const setSortBy = (v) => {
+    setPref('accSortBy', v)
+    setPref('accOrder', [])
+    setReorderMode(false)
+  }
 
+  const orderKey = accOrder.join(',')
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     let list = accounts.filter((a) => {
@@ -23,15 +32,38 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
       if (q && !a.name.toLowerCase().includes(q)) return false
       return true
     })
-    list = [...list].sort((a, b) => {
-      if (sortBy === 'type') {
-        return accountTypeLabel(a.type).localeCompare(accountTypeLabel(b.type)) ||
-          a.name.localeCompare(b.name)
-      }
-      return a.name.localeCompare(b.name)
-    })
+    const manual = orderKey ? orderKey.split(',') : []
+    if (manual.length) {
+      list = [...list].sort((a, b) => {
+        const ia = manual.indexOf(a.id)
+        const ib = manual.indexOf(b.id)
+        const na = ia === -1 ? Infinity : ia
+        const nb = ib === -1 ? Infinity : ib
+        if (na !== nb) return na - nb
+        return a.name.localeCompare(b.name)
+      })
+    } else {
+      list = [...list].sort((a, b) => {
+        if (sortBy === 'type') {
+          return accountTypeLabel(a.type).localeCompare(accountTypeLabel(b.type)) ||
+            a.name.localeCompare(b.name)
+        }
+        return a.name.localeCompare(b.name)
+      })
+    }
     return list
-  }, [accounts, query, typeFilter, sortBy])
+  }, [accounts, query, typeFilter, sortBy, orderKey])
+
+  // Guarda el orden manual (los no visibles se conservan al final).
+  const saveOrder = (ids) => {
+    const prev = prefs.accOrder || []
+    const seen = new Set(ids)
+    setPref('accOrder', [...ids, ...prev.filter((id) => !seen.has(id))])
+  }
+  const { order: dragOrder, dragPropsFor } = useDragOrder(visible.map((a) => a.id), saveOrder)
+  const byId = useMemo(() => new Map(visible.map((a) => [a.id, a])), [visible])
+  const rendered = reorderMode ? dragOrder.map((id) => byId.get(id)).filter(Boolean) : visible
+  const canReorder = visible.length > 1 && !query.trim()
 
   return (
     <div className="acc-list">
@@ -59,7 +91,10 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
         <div className="acc-list__actions">
           <AccountsFilter
             query={query}
-            onQuery={setQuery}
+            onQuery={(v) => {
+              setQuery(v)
+              if (v.trim()) setReorderMode(false)
+            }}
             typeFilter={typeFilter}
             onType={setTypeFilter}
             sortBy={sortBy}
@@ -69,6 +104,22 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
               setSortBy('name')
             }}
           />
+          {canReorder && (
+            <button
+              type="button"
+              className={`acc-reorder${reorderMode ? ' acc-reorder--on' : ''}`}
+              onClick={() => setReorderMode((v) => !v)}
+              aria-label={reorderMode ? 'Listo' : 'Reordenar'}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                {reorderMode ? (
+                  <path d="M6 6l12 12M18 6L6 18" />
+                ) : (
+                  <path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3" />
+                )}
+              </svg>
+            </button>
+          )}
           <button type="button" className="acc-add" onClick={onAdd} aria-label="Agregar cuenta">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
@@ -84,12 +135,14 @@ export default function AccountsList({ accounts, scope, onScope, onOpen, onEdit,
         </p>
       ) : (
         <div className="acc-list__grid" key={scope}>
-          {visible.map((account) => (
+          {rendered.map((account) => (
             <AccountCard
               key={account.id}
               account={account}
               onOpen={() => onOpen(account)}
               showMenu={false}
+              dragMode={reorderMode}
+              dragProps={reorderMode ? dragPropsFor(account.id) : null}
             />
           ))}
         </div>

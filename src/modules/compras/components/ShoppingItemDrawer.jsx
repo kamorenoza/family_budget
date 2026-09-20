@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
 import '../../presupuesto/components/IncomeDrawer.css'
 
@@ -13,7 +13,22 @@ export default function ShoppingItemDrawer({ item, groups = [], onSubmit, onDele
   const [name, setName] = useState(item?.name || '')
   const [value, setValue] = useState(item ? formatThousands(item.amount) : '')
   const [group, setGroup] = useState(item?.group || '')
+  const [groupOpen, setGroupOpen] = useState(false)
+  const groupBoxRef = useRef(null)
   const [error, setError] = useState('')
+
+  // Cierra el menú de grupos al tocar fuera.
+  useEffect(() => {
+    if (!groupOpen) return
+    const onDoc = (e) => {
+      if (groupBoxRef.current && !groupBoxRef.current.contains(e.target)) setGroupOpen(false)
+    }
+    document.addEventListener('pointerdown', onDoc)
+    return () => document.removeEventListener('pointerdown', onDoc)
+  }, [groupOpen])
+
+  const gq = group.trim().toLowerCase()
+  const filteredGroups = gq ? groups.filter((g) => g.toLowerCase().includes(gq)) : groups
 
   const submit = () => {
     if (!name.trim()) return setError('Escribe un nombre.')
@@ -66,22 +81,54 @@ export default function ShoppingItemDrawer({ item, groups = [], onSubmit, onDele
 
         <div className="income-field">
           <label className="income-field__label" htmlFor="item-group">Grupo (opcional)</label>
-          <input
-            id="item-group"
-            type="text"
-            className="income-field__input"
-            placeholder="Ej. Frutas"
-            list="shop-item-groups"
-            value={group}
-            onChange={(e) => setGroup(e.target.value)}
-          />
-          {groups.length > 0 && (
-            <datalist id="shop-item-groups">
-              {groups.map((g) => (
-                <option key={g} value={g} />
-              ))}
-            </datalist>
-          )}
+          <div className="shop-combo" ref={groupBoxRef}>
+            <div className="shop-combo__control">
+              <input
+                id="item-group"
+                type="text"
+                className="income-field__input shop-combo__input"
+                placeholder="Ej. Frutas"
+                autoComplete="off"
+                value={group}
+                onChange={(e) => {
+                  setGroup(e.target.value)
+                  setGroupOpen(true)
+                }}
+                onFocus={() => setGroupOpen(true)}
+              />
+              {groups.length > 0 && (
+                <button
+                  type="button"
+                  className="shop-combo__arrow"
+                  tabIndex={-1}
+                  aria-label="Ver grupos"
+                  onClick={() => setGroupOpen((v) => !v)}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {groupOpen && filteredGroups.length > 0 && (
+              <ul className="shop-combo__menu">
+                {filteredGroups.map((g) => (
+                  <li key={g}>
+                    <button
+                      type="button"
+                      className="shop-combo__option"
+                      onClick={() => {
+                        setGroup(g)
+                        setGroupOpen(false)
+                      }}
+                    >
+                      {g}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {error && <p className="income-drawer__error">{error}</p>}

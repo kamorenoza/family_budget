@@ -74,12 +74,21 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
     })
   }
 
-  // Grupos: los pendientes definen el orden; los marcados van al final de su grupo.
+  // Grupos: el orden del grupo es estable (primera aparición en la lista completa);
+  // dentro de cada grupo van los pendientes y luego los marcados, sin mover el grupo.
   const groups = useMemo(() => {
     const groupOrder = []
     const seen = new Set()
     const pendingByGroup = {}
     const checkedByGroup = {}
+    // Posición del grupo: se fija por la lista persistida, no cambia al marcar.
+    for (const it of items) {
+      const k = groupKeyOf(it)
+      if (!seen.has(k)) {
+        seen.add(k)
+        groupOrder.push(k)
+      }
+    }
     for (const id of order) {
       const it = pendingById.get(id)
       if (!it) continue
@@ -101,7 +110,7 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
       checkedByGroup[k].push(it)
     }
     return { groupOrder, pendingByGroup, checkedByGroup }
-  }, [order, pendingById, checked])
+  }, [items, order, pendingById, checked])
 
   // Con grupos, los sueltos se muestran bajo un grupo por defecto "Sin grupo".
   const hasNamedGroups = groups.groupOrder.some((k) => k !== NONE)
