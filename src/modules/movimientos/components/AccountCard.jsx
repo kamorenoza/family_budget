@@ -205,11 +205,9 @@ export default function AccountCard({ account, onOpen, onEdit, onDelete, showMen
             <span className="acc-card__balance-value">{formatCurrency(savingsBalance(account))}</span>
           </div>
           {account.allowPending && (
-            <div className="acc-card__grid">
-              <div className="acc-card__stat">
-                <span className="acc-card__stat-label">Saldo real</span>
-                <span className="acc-card__stat-value">{formatCurrency(savingsRealBalance(account))}</span>
-              </div>
+            <div className="acc-card__realrow">
+              <span className="acc-card__realrow-label">Saldo real</span>
+              <span className="acc-card__realrow-value">{formatCurrency(savingsRealBalance(account))}</span>
             </div>
           )}
         </>

@@ -42,6 +42,15 @@ export default function Movimientos() {
     localStorage.setItem('movimientosScope', scope)
   }, [scope])
 
+  // Al tocar "Cuentas" en el menú estando dentro de una cuenta, vuelve a la lista.
+  useEffect(() => {
+    const onHome = (e) => {
+      if (e.detail === '/movimientos') setSelectedId(null)
+    }
+    window.addEventListener('nav:home', onHome)
+    return () => window.removeEventListener('nav:home', onHome)
+  }, [])
+
   // Personales: solo mías. Familiares (o cuentas antiguas sin scope): de todos.
   const visibleAccounts = useMemo(
     () =>

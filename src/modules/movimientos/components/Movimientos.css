@@ -365,7 +365,7 @@
   background: var(--color-surface);
 }
 
-.acc-card__menu-danger {
+.acc-card__menu-list button.acc-card__menu-danger {
   color: var(--color-danger);
 }
 
@@ -427,6 +427,23 @@
   color: var(--color-text-secondary);
   border-top: 1px dashed rgba(0, 0, 0, 0.12);
   padding-top: var(--space-sm);
+}
+
+.acc-card__realrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-size: 0.9rem;
+}
+
+.acc-card__realrow-label {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.acc-card__realrow-value {
+  font-weight: var(--font-weight-semibold);
 }
 
 /* ===== Filtro (lista y movimientos) ===== */
@@ -543,6 +560,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+/* En el detalle el botón de filtro está a la izquierda: el menú abre hacia la derecha. */
+.acc-filter:not(.acc-filter--list) .acc-filter__menu {
+  right: auto;
+  left: 0;
 }
 
 .acc-filter__label {
@@ -858,7 +881,6 @@
 
 .mov-group__label {
   flex: 1;
-  font-weight: var(--font-weight-semibold);
   font-size: 0.9rem;
   color: var(--color-text-primary);
 }
@@ -922,7 +944,6 @@
 }
 
 .mov-item__desc {
-  font-weight: var(--font-weight-semibold);
   font-size: 0.92rem;
   line-height: 1.15;
   color: var(--color-text-primary);

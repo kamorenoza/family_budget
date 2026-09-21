@@ -339,7 +339,9 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
   const orderBy = prefs[orderKey] ?? 'newest'
   const setGroupBy = (v) => setPref(groupKey, v)
   const setOrderBy = (v) => setPref(orderKey, v)
-  const [collapsed, setCollapsed] = useState({})
+  // Grupos colapsados persistidos por cuenta.
+  const collapsedKey = `movCollapsed_${account.id}`
+  const collapsed = prefs[collapsedKey] || {}
   const [completedOpen, setCompletedOpen] = useState(false)
 
   const history = useMemo(() => last6MonthsHistory(account), [account])
@@ -373,7 +375,7 @@ export default function AccountDetail({ account, onBack, onEdit, onDelete, onAdd
   )
   const hasPending = canPend && pending.length > 0
 
-  const toggle = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }))
+  const toggle = (key) => setPref(collapsedKey, { ...collapsed, [key]: !collapsed[key] })
 
   return (
     <div className="acc-detail">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DrawerHeader from '../../../shared/components/SideDrawer/DrawerHeader.jsx'
 import DateField from '../../../shared/components/DateField/DateField.jsx'
+import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import { ACCOUNT_TYPES } from '../accounts.constants'
 import '../../presupuesto/components/IncomeDrawer.css'
 import '../../presupuesto/components/ExpenseDrawer.css'
@@ -26,6 +27,15 @@ function buildInstallments(count, value, firstDue) {
     rows.push({ id: `c${i + 1}`, index: i + 1, date, value, paid: false })
   }
   return rows
+}
+
+// Recalcula las fechas de las cuotas conservando pagos y valores por índice.
+function rebuildInstallments(existing, count, value, firstDue) {
+  const prev = new Map((existing || []).map((c) => [c.index, c]))
+  return buildInstallments(count, value, firstDue).map((c) => {
+    const old = prev.get(c.index)
+    return old ? { ...c, value: Number(old.value) || value, paid: !!old.paid } : c
+  })
 }
 
 // Restringe un día a 1..31.
@@ -61,7 +71,7 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
   )
   const [error, setError] = useState('')
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim()) return setError('Escribe un nombre.')
     const data = { name: name.trim(), type, scope: isFamily ? 'family' : 'personal' }
     if (type === 'TC') {
@@ -83,7 +93,18 @@ export default function AccountDrawer({ account, defaultScope = 'personal', onSu
         data.installmentsCount = count
         data.installmentValue = cval
         data.firstDueDate = firstDueDate
-        if (!editing) data.installments = buildInstallments(count, cval, firstDueDate)
+        if (!editing) {
+          data.installments = buildInstallments(count, cval, firstDueDate)
+        } else if (firstDueDate !== String(account.firstDueDate || '').slice(0, 10)) {
+          const ok = await confirm({
+            title: '¿Recalcular fechas?',
+            message: 'Cambiaste la fecha de la primera cuota. Se recalcularán las fechas de todas las cuotas.',
+            confirmText: 'Recalcular',
+            cancelText: 'Cancelar',
+          })
+          if (!ok) return
+          data.installments = rebuildInstallments(account.installments, count, cval, firstDueDate)
+        }
       } else {
         const dval = Number(String(debtValue).replace(/\D/g, ''))
         if (!dval || dval <= 0) return setError('Indica el valor de la deuda.')

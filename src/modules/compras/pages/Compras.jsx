@@ -25,6 +25,15 @@ export default function Compras() {
     localStorage.setItem('comprasScope', scope)
   }, [scope])
 
+  // Al tocar "Compras" en el menú estando dentro de una lista, vuelve al listado.
+  useEffect(() => {
+    const onHome = (e) => {
+      if (e.detail === '/compras') setSelectedId(null)
+    }
+    window.addEventListener('nav:home', onHome)
+    return () => window.removeEventListener('nav:home', onHome)
+  }, [])
+
   // Personales: solo mías. Familiares (o listas antiguas sin scope): de todos.
   const visibleLists = useMemo(
     () =>

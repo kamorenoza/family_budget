@@ -33,6 +33,9 @@ export default function Layout() {
     localStorage.setItem('lastRoute', location.pathname)
   }, [location.pathname])
 
+  // Avisa a la página activa que se tocó su item del menú (para volver a su inicio).
+  const goHome = (to) => window.dispatchEvent(new CustomEvent('nav:home', { detail: to }))
+
   // Mientras se resuelve la familia (y llegan los datos), muestra el loader
   // en vez del app-shell vacío.
   if (familyLoading) {
@@ -51,6 +54,7 @@ export default function Layout() {
             <NavLink
               key={to}
               to={to}
+              onClick={() => goHome(to)}
               className={({ isActive }) =>
                 isActive ? 'side-menu__item side-menu__item--active' : 'side-menu__item'
               }
@@ -81,7 +85,7 @@ export default function Layout() {
             if (to === '/presupuesto') {
               return (
                 <div key={to} className="bottom-menu__fab-container">
-                  <NavLink to={to} className="bottom-menu__fab" aria-label={label}>
+                  <NavLink to={to} onClick={() => goHome(to)} className="bottom-menu__fab" aria-label={label}>
                     <Icon color="#ffffff" />
                   </NavLink>
                   <span className="bottom-menu__fab-label">{label}</span>
@@ -92,6 +96,7 @@ export default function Layout() {
               <NavLink
                 key={to}
                 to={to}
+                onClick={() => goHome(to)}
                 className={({ isActive }) =>
                   isActive ? 'bottom-menu__btn bottom-menu__btn--active' : 'bottom-menu__btn'
                 }
