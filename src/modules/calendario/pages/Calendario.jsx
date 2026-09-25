@@ -341,10 +341,10 @@ function MonthMobile({ year, month, todayDay, itemsByDay, marksByDay, memberOf, 
 }
 
 // Botón cuadrado de filtros: abre un menú para filtrar los movimientos por persona y estado.
-function MemberFilter({ members, selected, status, onToggle, onStatus, onClear }) {
+function MemberFilter({ members, selected, status, onlyFamily, onToggle, onStatus, onToggleOnlyFamily, onClear }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
-  const anySelected = selected.length > 0 || status !== null
+  const anySelected = selected.length > 0 || status !== null || onlyFamily
 
   useEffect(() => {
     if (!open) return
@@ -410,6 +410,14 @@ function MemberFilter({ members, selected, status, onToggle, onStatus, onClear }
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className={`cal__filter-toggle${onlyFamily ? ' cal__filter-toggle--on' : ''}`}
+            onClick={() => { onToggleOnlyFamily(); setOpen(false) }}
+          >
+            <span className={`cal__filter-switch${onlyFamily ? ' cal__filter-switch--on' : ''}`} aria-hidden="true" />
+            Solo familiar
+          </button>
           {anySelected && (
             <button type="button" className="cal__filter-clear" onClick={() => { onClear(); setOpen(false) }}>
               Limpiar
@@ -453,17 +461,29 @@ export default function Calendario() {
   const [pendingExpense, setPendingExpense] = useState(null)
   const [filterEmails, setFilterEmails] = useState([])
   const [statusFilter, setStatusFilter] = useState(null)
+  // "Solo familiar": oculta lo personal; se recuerda por dispositivo.
+  const [onlyFamily, setOnlyFamily] = useState(() => localStorage.getItem('calOnlyFamily') === '1')
   const [modalDay, setModalDay] = useState(null)
 
   const toggleFilter = (email) =>
     setFilterEmails((prev) => (prev.includes(email) ? [] : [email]))
+  const toggleOnlyFamily = () =>
+    setOnlyFamily((v) => {
+      const nv = !v
+      localStorage.setItem('calOnlyFamily', nv ? '1' : '0')
+      return nv
+    })
   const clearFilter = () => {
     setFilterEmails([])
     setStatusFilter(null)
+    setOnlyFamily(false)
+    localStorage.setItem('calOnlyFamily', '0')
   }
   const passesFilter = (email) => filterEmails.length === 0 || filterEmails.includes(email)
   const passesStatus = (paid) =>
     statusFilter === null || (statusFilter === 'pagado' ? paid : !paid)
+  // Con "Solo familiar" activo, se excluyen los movimientos personales.
+  const passesFamily = (tx) => !onlyFamily || tx.scope !== 'personal'
 
   const todayDay =
     now.getFullYear() === period.year && now.getMonth() === period.month
@@ -499,12 +519,12 @@ export default function Calendario() {
     itemsByDay[day].push(entry)
   }
   visibleIncomes
-    .filter((tx) => canSeePersonal(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isReceived))
+    .filter((tx) => canSeePersonal(tx) && passesFamily(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isReceived))
     .forEach((tx) => addItem(dayOfDate(tx.date), { kind: 'income', tx }))
   // Los gastos asociados a un bolsillo se muestran como un movimiento más;
   // se excluyen solo las metas de bolsillo (que no son un gasto con fecha).
   visibleExpenses
-    .filter((tx) => tx.kind !== 'bolsillo' && canSeePersonal(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isPaid))
+    .filter((tx) => tx.kind !== 'bolsillo' && canSeePersonal(tx) && passesFamily(tx) && passesFilter(tx.memberEmail) && passesStatus(tx.isPaid))
     .forEach((tx) => addItem(dayOfDate(tx.date), { kind: 'expense', tx }))
 
   // Bolsillos del mes y disponible por persona (para el drawer de gastos).
@@ -560,14 +580,15 @@ export default function Calendario() {
     setEditingIncome(null)
     setDeleteOpen(false)
   }
-  // Al editar el valor o el nombre de un ingreso fijo, se pregunta a qué meses aplica.
+  // Al editar el valor, el nombre o el origen de un ingreso fijo, se pregunta a qué meses aplica.
   const handleSubmitIncome = (data) => {
     if (
       editingIncome &&
       editingIncome.fixed &&
       data.fixed &&
       (Number(data.amount) !== Number(editingIncome.amount) ||
-        data.description !== editingIncome.description)
+        data.description !== editingIncome.description ||
+        data.memberEmail !== editingIncome.memberEmail)
     ) {
       setPendingIncome({ item: editingIncome, data })
       setIncomeScopeOpen(true)
@@ -579,7 +600,11 @@ export default function Calendario() {
     const p = pendingIncome
     if (!p) return
     if (scope === 'month')
-      overrideIncomeMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+      overrideIncomeMonth(p.item, monthKey, {
+        amount: p.data.amount,
+        description: p.data.description,
+        memberEmail: p.data.memberEmail,
+      })
     else if (scope === 'from') splitIncomeFrom(p.item, monthKey, p.data)
     else updateIncome(p.item, p.data)
     setIncomeScopeOpen(false)
@@ -620,14 +645,17 @@ export default function Calendario() {
     setEditingExpense(null)
     setExpenseDeleteOpen(false)
   }
-  // Al editar el valor o el nombre de un gasto fijo, se pregunta a qué meses aplica.
+  // Al editar el valor, el nombre o el origen de un gasto fijo, se pregunta a qué meses aplica.
   const handleSubmitExpense = (data) => {
     if (
       editingExpense &&
       editingExpense.fixed &&
       data.fixed &&
       (Number(data.amount) !== Number(editingExpense.amount) ||
-        data.description !== editingExpense.description)
+        data.description !== editingExpense.description ||
+        data.memberEmail !== editingExpense.memberEmail ||
+        data.sourceType !== editingExpense.sourceType ||
+        (data.bolsilloId || null) !== (editingExpense.bolsilloId || null))
     ) {
       setPendingExpense({ item: editingExpense, data })
       setExpenseScopeOpen(true)
@@ -639,7 +667,13 @@ export default function Calendario() {
     const p = pendingExpense
     if (!p) return
     if (scope === 'month')
-      overrideExpenseMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+      overrideExpenseMonth(p.item, monthKey, {
+        amount: p.data.amount,
+        description: p.data.description,
+        memberEmail: p.data.memberEmail,
+        sourceType: p.data.sourceType,
+        bolsilloId: p.data.bolsilloId ?? null,
+      })
     else if (scope === 'from') splitExpenseFrom(p.item, monthKey, p.data)
     else updateExpense(p.item, p.data)
     setExpenseScopeOpen(false)
@@ -695,8 +729,10 @@ export default function Calendario() {
             members={members}
             selected={filterEmails}
             status={statusFilter}
+            onlyFamily={onlyFamily}
             onToggle={toggleFilter}
             onStatus={setStatusFilter}
+            onToggleOnlyFamily={toggleOnlyFamily}
             onClear={clearFilter}
           />
         </div>

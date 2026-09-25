@@ -148,10 +148,8 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* iPad / desktop: el panel abre hacia adentro para no recortarse */
-@media (min-width: 960px) {
-  .month-selector__panel {
-    left: auto;
-    right: 0;
-  }
+/* El panel abre hacia la derecha cuando no cabe alineado a la izquierda (medido al abrir). */
+.month-selector__panel--right {
+  left: auto;
+  right: 0;
 }

@@ -31,13 +31,15 @@ export function monthKeyOf(month, year) {
   return `${year}-${String(month + 1).padStart(2, '0')}`
 }
 
-// Aplica el ajuste de "solo este mes" (valor/nombre) guardado en monthOverrides.
+// Aplica el ajuste de "solo este mes" (valor/nombre/origen) guardado en monthOverrides.
 export function applyMonthOverride(item, monthKey) {
   const ov = item.monthOverrides && item.monthOverrides[monthKey]
   if (!ov) return item
   const next = { ...item }
-  if ('amount' in ov) next.amount = ov.amount
-  if ('description' in ov) next.description = ov.description
+  // Campos que pueden ajustarse solo para el mes indicado (valor, nombre y origen del movimiento).
+  for (const key of ['amount', 'description', 'memberEmail', 'sourceType', 'bolsilloId', 'categoryId']) {
+    if (key in ov) next[key] = ov[key]
+  }
   return next
 }
 

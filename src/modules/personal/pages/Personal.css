@@ -137,7 +137,7 @@
 
   .personal {
     display: grid;
-    grid-template-columns: minmax(0, 400px) 1fr;
+    grid-template-columns: minmax(0, 320px) 1fr;
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'header header'

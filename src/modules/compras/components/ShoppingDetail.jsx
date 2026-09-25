@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ShoppingItemRow from './ShoppingItemRow.jsx'
 import SearchIcon from '../../../shared/components/icons/SearchIcon.jsx'
+import FilterIcon from '../../../shared/components/icons/FilterIcon.jsx'
 import { formatCurrency } from '../../presupuesto/presupuesto.utils'
 
 const NONE = '__none__'
@@ -46,6 +47,26 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
   const orderRef = useRef([])
   const draggingId = useRef(null)
   const draggingGroup = useRef(null)
+
+  // Filtro "ocultar completados": se recuerda por dispositivo.
+  const [hideCompleted, setHideCompleted] = useState(() => localStorage.getItem('shopHideCompleted') === '1')
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterRef = useRef(null)
+  const toggleHideCompleted = () => {
+    setHideCompleted((v) => {
+      const nv = !v
+      localStorage.setItem('shopHideCompleted', nv ? '1' : '0')
+      return nv
+    })
+  }
+  useEffect(() => {
+    if (!filterOpen) return undefined
+    const onDoc = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [filterOpen])
 
   // Al buscar no se reordena (evita perder artículos ocultos).
   useEffect(() => {
@@ -109,7 +130,10 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
       if (!checkedByGroup[k]) checkedByGroup[k] = []
       checkedByGroup[k].push(it)
     }
-    return { groupOrder, pendingByGroup, checkedByGroup }
+    // Los grupos totalmente completados (sin pendientes) se envían al final.
+    const isDone = (k) => (pendingByGroup[k] || []).length === 0 && (checkedByGroup[k] || []).length > 0
+    const orderedGroups = [...groupOrder.filter((k) => !isDone(k)), ...groupOrder.filter((k) => isDone(k))]
+    return { groupOrder: orderedGroups, pendingByGroup, checkedByGroup }
   }, [items, order, pendingById, checked])
 
   // Con grupos, los sueltos se muestran bajo un grupo por defecto "Sin grupo".
@@ -216,7 +240,7 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
 
   const renderGroup = (key) => {
     const pend = groups.pendingByGroup[key] || []
-    const chk = groups.checkedByGroup[key] || []
+    const chk = hideCompleted ? [] : groups.checkedByGroup[key] || []
     if (pend.length === 0 && chk.length === 0) return null
     const name = key === NONE ? (hasNamedGroups ? 'Sin grupo' : null) : key
     const isCollapsed = collapsed.has(key)
@@ -354,6 +378,30 @@ export default function ShoppingDetail({ list, onBack, onEdit, onDelete, onAddIt
                 <button type="button" className="shop-search__clear" onClick={() => setQuery('')} aria-label="Limpiar">
                   ×
                 </button>
+              )}
+            </div>
+            <div className="shop-detail__filter" ref={filterRef}>
+              <button
+                type="button"
+                className={`shop-detail__reorder${hideCompleted ? ' shop-detail__reorder--on' : ''}`}
+                onClick={() => setFilterOpen((v) => !v)}
+                aria-label="Filtrar"
+              >
+                <FilterIcon size={18} />
+              </button>
+              {filterOpen && (
+                <div className="shop-detail__filter-menu">
+                  <button
+                    type="button"
+                    className="shop-detail__filter-opt"
+                    onClick={toggleHideCompleted}
+                    role="switch"
+                    aria-checked={hideCompleted}
+                  >
+                    <span className="shop-detail__filter-text">Ocultar completados</span>
+                    <span className={`shop-detail__filter-switch${hideCompleted ? ' shop-detail__filter-switch--on' : ''}`} aria-hidden="true" />
+                  </button>
+                </div>
               )}
             </div>
             {canReorder && (

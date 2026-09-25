@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMembers } from '../useMembers'
 import { useAuth } from '../../../shared/context/AuthContext.jsx'
 import { useFamily } from '../../../shared/context/FamilyContext.jsx'
 import { confirm } from '../../../shared/components/ConfirmDialog/confirm.jsx'
 import { getFamily } from '../../../shared/services/familyService'
+import {
+  notificationsSupported,
+  notificationPermission,
+  enableNotifications,
+  disableNotifications,
+} from '../../../database/messaging'
 import { downloadJson } from '../../../shared/utils/download'
 import SideDrawer from '../../../shared/components/SideDrawer/SideDrawer.jsx'
 import AddMemberDrawer from '../components/AddMemberDrawer.jsx'
@@ -19,8 +25,40 @@ export default function Configuracion() {
   const { members, addMember, updateMember, removeMember } = useMembers(user)
   const [openAdd, setOpenAdd] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [notif, setNotif] = useState({ supported: false, permission: 'default', on: false, busy: false })
 
   const inviterName = pendingInviter?.name || pendingInviter?.email || 'Alguien'
+
+  // Refleja el soporte y permiso de notificaciones al abrir la pantalla.
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      const supported = await notificationsSupported()
+      if (!alive) return
+      const permission = notificationPermission()
+      setNotif((s) => ({ ...s, supported, permission, on: permission === 'granted' }))
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  // Activa (pide permiso + registra token) o desactiva el recordatorio de pagos.
+  const handleToggleNotif = async () => {
+    if (notif.busy || !notif.supported) return
+    setNotif((s) => ({ ...s, busy: true }))
+    try {
+      if (!notif.on) {
+        const token = await enableNotifications(user?.email)
+        setNotif((s) => ({ ...s, on: !!token, permission: notificationPermission(), busy: false }))
+      } else {
+        await disableNotifications(user?.email)
+        setNotif((s) => ({ ...s, on: false, busy: false }))
+      }
+    } catch {
+      setNotif((s) => ({ ...s, busy: false }))
+    }
+  }
 
   // Al aceptar, comparto el presupuesto de quien invita (su data persiste).
   const handleAccept = async () => {
@@ -140,6 +178,40 @@ export default function Configuracion() {
             </button>
           )}
         </div>
+      </section>
+
+      <section className="settings__section">
+        <h2 className="settings__section-title">Notificaciones</h2>
+        {notif.supported ? (
+          <button
+            type="button"
+            className="settings__notif"
+            role="switch"
+            aria-checked={notif.on}
+            onClick={handleToggleNotif}
+            disabled={notif.busy}
+          >
+            <span className="settings__notif-info">
+              <span className="settings__notif-title">Recordatorio de pagos</span>
+              <span className="settings__notif-desc">
+                Aviso diario (~8:00 a. m.) con los pagos que vencen ese día.
+              </span>
+            </span>
+            <span
+              className={`settings__notif-switch${notif.on ? ' settings__notif-switch--on' : ''}`}
+            />
+          </button>
+        ) : (
+          <p className="settings__notif-desc">
+            Tu dispositivo o navegador no soporta notificaciones push.
+          </p>
+        )}
+        {notif.permission === 'denied' && (
+          <p className="settings__notif-hint">
+            Bloqueaste las notificaciones. Actívalas en los ajustes del navegador para recibir
+            recordatorios.
+          </p>
+        )}
       </section>
 
       {familyId && (

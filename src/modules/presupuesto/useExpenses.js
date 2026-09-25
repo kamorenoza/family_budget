@@ -94,7 +94,13 @@ export function useExpenses() {
   const splitExpenseFrom = useCallback(
     (expense, monthKey, data) => {
       if (!familyId) return
-      updateExpenseDoc(expense.id, { endMonth: prevMonthKey(monthKey) })
+      // El fijo original conserva solo lo anterior al corte: sus ajustes "solo este mes"
+      // de meses previos se mantienen y se limpian los de monthKey en adelante (se sobreescriben).
+      updateExpenseDoc(expense.id, {
+        endMonth: prevMonthKey(monthKey),
+        monthOverrides: monthsBefore(expense.monthOverrides, monthKey),
+        paidMonths: monthsBefore(expense.paidMonths, monthKey),
+      })
       const { paid, monthKey: _mk, repeatMonths, ...base } = data
       const doc = { ...base, fixed: true, startMonth: monthKey, paidMonths: {}, createdAt: Date.now() }
       if (expense.endMonth && expense.endMonth >= monthKey) doc.endMonth = expense.endMonth
@@ -118,6 +124,13 @@ export function useExpenses() {
     overrideExpenseMonth,
     splitExpenseFrom,
   }
+}
+
+// Filtra un mapa {YYYY-MM: ...} dejando solo las claves anteriores a monthKey.
+function monthsBefore(map, monthKey) {
+  const out = {}
+  for (const k of Object.keys(map || {})) if (k < monthKey) out[k] = map[k]
+  return out
 }
 
 // Devuelve la clave YYYY-MM del mes anterior.

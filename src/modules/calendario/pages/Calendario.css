@@ -178,6 +178,50 @@
   cursor: pointer;
 }
 
+/* Toggle "Solo familiar" */
+.cal__filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.cal__filter-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.cal__filter-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  transition: transform var(--transition-fast);
+}
+
+.cal__filter-switch--on {
+  background: var(--color-primary);
+}
+
+.cal__filter-switch--on::after {
+  transform: translateX(14px);
+}
+
 /* ===== Desktop / iPad: rejilla ===== */
 .cal__calendar {
   display: flex;

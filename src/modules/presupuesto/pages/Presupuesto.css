@@ -305,10 +305,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  position: relative;
 }
 
 .tx-filter {
-  position: relative;
+  position: static;
   display: flex;
 }
 
@@ -425,20 +426,8 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* En pantallas angostas el menú se ancla al borde derecho de la barra de acciones
-   (no al botón de filtro que queda al centro) para que nunca se salga de la pantalla. */
-@media (max-width: 699px) {
-  .tx-section__actions {
-    position: relative;
-  }
-  .tx-filter {
-    position: static;
-  }
-  .tx-filter__menu {
-    right: 0;
-    left: auto;
-  }
-}
+/* El menú se ancla siempre al borde derecho de la barra de acciones (no al botón de
+   filtro, que puede quedar al centro) para que nunca se salga del contenedor con scroll. */
 
 .tx-filter__search {
   display: flex;
@@ -973,7 +962,7 @@
 @media (min-width: 960px) {
   .presupuesto {
     display: grid;
-    grid-template-columns: minmax(0, 400px) 1fr;
+    grid-template-columns: minmax(0, 320px) 1fr;
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'header header'

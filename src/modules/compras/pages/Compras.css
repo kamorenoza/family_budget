@@ -211,10 +211,31 @@
   display: none;
 }
 
+/* En el detalle, el scroll vive en la lista de artículos (no en toda la página). */
+.app:has(.shop-detail) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app__main:has(.shop-detail) {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.compras:has(.shop-detail) {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .shop-detail {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  height: 100%;
+  min-height: 0;
 }
 
 .shop-detail__head {
@@ -327,6 +348,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: none;
+}
+
+/* Cuando no cabe abajo, el menú se despliega hacia arriba. */
+.shop-detail .acc-card__menu-list--up {
+  top: auto;
+  bottom: 100%;
+  margin: 0 0 4px;
 }
 
 .shop-detail .acc-card__menu-list button {
@@ -549,6 +577,80 @@
   color: #ffffff;
 }
 
+/* Filtro "ocultar completados" */
+.shop-detail__filter {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.shop-detail__filter-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  padding: 4px;
+  min-width: 190px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md, 0 6px 20px rgba(0, 0, 0, 0.12));
+}
+
+.shop-detail__filter-opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--color-text-primary);
+}
+
+.shop-detail__filter-opt:hover {
+  background: var(--color-surface);
+}
+
+.shop-detail__filter-text {
+  min-width: 0;
+}
+
+/* Toggle switch (mismo patrón que el calendario). */
+.shop-detail__filter-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-muted) 35%, #fff);
+  transition: background var(--transition-fast);
+}
+
+.shop-detail__filter-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition-fast);
+}
+
+.shop-detail__filter-switch--on {
+  background: #8971ad;
+}
+
+.shop-detail__filter-switch--on::after {
+  transform: translateX(14px);
+}
+
 .shop-detail__add {
   display: inline-flex;
   align-items: center;
@@ -655,6 +757,10 @@
 .shop-detail__items {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .shop-item {
@@ -754,6 +860,17 @@
   flex-direction: column;
   gap: var(--space-md);
   min-width: 0;
+}
+
+/* En el detalle, el cuerpo y la columna principal ceden altura para que scrollee la lista. */
+.shop-detail__body {
+  flex: 1;
+  min-height: 0;
+}
+
+.shop-detail__main {
+  flex: 1;
+  min-height: 0;
 }
 
 /* Label de los botones dentro de la lista (oculto en móvil) */

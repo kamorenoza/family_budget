@@ -33,6 +33,7 @@ export default function MonthSelector({ onChange, initialMonth, initialYear }) {
   const [year, setYear] = useState(initialYear ?? now.getFullYear())
   const [open, setOpen] = useState(false)
   const [panelYear, setPanelYear] = useState(initialYear ?? now.getFullYear())
+  const [alignRight, setAlignRight] = useState(false)
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -45,6 +46,12 @@ export default function MonthSelector({ onChange, initialMonth, initialYear }) {
   }, [open])
 
   const toggle = () => {
+    // Al abrir, decide si el panel se alinea a la derecha para no recortarse en pantallas angostas (ej. iPad vertical).
+    if (!open) {
+      const rect = rootRef.current?.getBoundingClientRect()
+      const PANEL_WIDTH = 240
+      if (rect) setAlignRight(rect.left + PANEL_WIDTH > window.innerWidth - 8)
+    }
     setPanelYear(year)
     setOpen((o) => !o)
   }
@@ -98,7 +105,7 @@ export default function MonthSelector({ onChange, initialMonth, initialYear }) {
       </div>
 
       {open && (
-        <div className="month-selector__panel" role="menu">
+        <div className={`month-selector__panel${alignRight ? ' month-selector__panel--right' : ''}`} role="menu">
           <div className="month-selector__years">
             <button className="month-selector__nav" onClick={() => setPanelYear((y) => y - 1)} aria-label="Año anterior">
               <ChevronLeft />

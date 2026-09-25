@@ -4,6 +4,7 @@ import { formatCurrency } from '../../presupuesto/presupuesto.utils'
 // Menú de tres puntos con Editar / Eliminar (igual al de las cuentas).
 function DotMenu({ onEdit, onDelete }) {
   const [open, setOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -22,6 +23,11 @@ function DotMenu({ onEdit, onDelete }) {
         className="acc-card__dots"
         onClick={(e) => {
           e.stopPropagation()
+          // Si no cabe abajo, el menú se abre hacia arriba.
+          if (!open) {
+            const rect = e.currentTarget.getBoundingClientRect()
+            setDropUp(window.innerHeight - rect.bottom < 130)
+          }
           setOpen((v) => !v)
         }}
         aria-label="Opciones"
@@ -33,7 +39,7 @@ function DotMenu({ onEdit, onDelete }) {
         </svg>
       </button>
       {open && (
-        <ul className="acc-card__menu-list">
+        <ul className={`acc-card__menu-list${dropUp ? ' acc-card__menu-list--up' : ''}`}>
           <li>
             <button
               type="button"

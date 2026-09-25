@@ -256,3 +256,77 @@
   display: flex;
   gap: var(--space-sm);
 }
+
+/* Toggle de notificaciones */
+.settings__notif {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings__notif:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.settings__notif-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings__notif-title {
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.settings__notif-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.settings__notif-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-danger);
+}
+
+.settings__notif-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  transition: background var(--transition-base);
+}
+
+.settings__notif-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform var(--transition-base);
+}
+
+.settings__notif-switch--on {
+  background: var(--color-primary);
+}
+
+.settings__notif-switch--on::after {
+  transform: translateX(18px);
+}

@@ -323,14 +323,15 @@ export default function Presupuesto() {
     setDeleteOpen(false)
   }
 
-  // Al editar el valor o el nombre de un ingreso fijo, se pregunta a qué meses aplica.
+  // Al editar el valor, el nombre o el origen de un ingreso fijo, se pregunta a qué meses aplica.
   const handleSubmitIncome = (data) => {
     if (
       editingIncome &&
       editingIncome.fixed &&
       data.fixed &&
       (Number(data.amount) !== Number(editingIncome.amount) ||
-        data.description !== editingIncome.description)
+        data.description !== editingIncome.description ||
+        data.memberEmail !== editingIncome.memberEmail)
     ) {
       setPendingIncome({ item: editingIncome, data })
       setIncomeScopeOpen(true)
@@ -344,7 +345,11 @@ export default function Presupuesto() {
     const p = pendingIncome
     if (!p) return
     if (scope === 'month')
-      overrideIncomeMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+      overrideIncomeMonth(p.item, monthKey, {
+        amount: p.data.amount,
+        description: p.data.description,
+        memberEmail: p.data.memberEmail,
+      })
     else if (scope === 'from') splitIncomeFrom(p.item, monthKey, p.data)
     else updateIncome(p.item, p.data)
     setIncomeScopeOpen(false)
@@ -395,14 +400,17 @@ export default function Presupuesto() {
     setExpenseDeleteOpen(false)
   }
 
-  // Al editar el valor o el nombre de un gasto fijo, se pregunta a qué meses aplica.
+  // Al editar el valor, el nombre o el origen de un gasto fijo, se pregunta a qué meses aplica.
   const handleSubmitExpense = (data) => {
     if (
       editingExpense &&
       editingExpense.fixed &&
       data.fixed &&
       (Number(data.amount) !== Number(editingExpense.amount) ||
-        data.description !== editingExpense.description)
+        data.description !== editingExpense.description ||
+        data.memberEmail !== editingExpense.memberEmail ||
+        data.sourceType !== editingExpense.sourceType ||
+        (data.bolsilloId || null) !== (editingExpense.bolsilloId || null))
     ) {
       setPendingExpense({ item: editingExpense, data })
       setExpenseScopeOpen(true)
@@ -416,7 +424,13 @@ export default function Presupuesto() {
     const p = pendingExpense
     if (!p) return
     if (scope === 'month')
-      overrideExpenseMonth(p.item, monthKey, { amount: p.data.amount, description: p.data.description })
+      overrideExpenseMonth(p.item, monthKey, {
+        amount: p.data.amount,
+        description: p.data.description,
+        memberEmail: p.data.memberEmail,
+        sourceType: p.data.sourceType,
+        bolsilloId: p.data.bolsilloId ?? null,
+      })
     else if (scope === 'from') splitExpenseFrom(p.item, monthKey, p.data)
     else updateExpense(p.item, p.data)
     setExpenseScopeOpen(false)
@@ -792,7 +806,7 @@ export default function Presupuesto() {
                 }
                 const m = memberOf(tx.memberEmail)
                 const source = m
-                  ? { name: m.name.split(' ')[0], color: m.color || 'var(--color-primary)' }
+                  ? { name: m.name.split(' ')[0], color: m.color || 'var(--color-primary)', photo: m.photo }
                   : null
                 return (
                   <ExpenseItem
@@ -800,6 +814,7 @@ export default function Presupuesto() {
                     tx={tx}
                     category={categoryOf(tx.categoryId)}
                     source={source}
+                    showOwnerAvatar
                     dateLabel={fullDateLabel(dayOfDate(tx.date), period.month, period.year)}
                     onToggle={handleTogglePaid}
                     onEdit={openEditExpense}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './shared/components/Layout/Layout.jsx'
 import ProtectedRoute from './shared/components/ProtectedRoute.jsx'
@@ -8,6 +9,7 @@ import Presupuesto from './modules/presupuesto/pages/Presupuesto.jsx'
 import Movimientos from './modules/movimientos/pages/Movimientos.jsx'
 import Compras from './modules/compras/pages/Compras.jsx'
 import Configuracion from './modules/settings/pages/Configuracion.jsx'
+import { listenForegroundMessages } from './database/messaging'
 
 const APP_ROUTES = ['/calendario', '/personal', '/presupuesto', '/movimientos', '/compras', '/configuracion']
 
@@ -19,6 +21,15 @@ function RootRedirect() {
 }
 
 export default function App() {
+  // Muestra las notificaciones push que llegan con la app abierta.
+  useEffect(() => {
+    let unsubscribe = () => {}
+    listenForegroundMessages().then((fn) => {
+      unsubscribe = fn
+    })
+    return () => unsubscribe()
+  }, [])
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
