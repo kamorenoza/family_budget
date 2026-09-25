@@ -46,7 +46,9 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .compras .acc-scope__tab--on {
@@ -161,7 +163,9 @@
   padding: var(--space-md);
   cursor: pointer;
   text-align: left;
-  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .shop-card:hover {
@@ -568,7 +572,9 @@
   background: color-mix(in srgb, var(--color-text-muted) 14%, #fff);
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .shop-detail__reorder--on {
@@ -632,7 +638,7 @@
 }
 
 .shop-detail__filter-switch::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;
@@ -761,6 +767,8 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  margin-right: -16px;
+  padding-right: 16px;
 }
 
 .shop-item {
@@ -798,7 +806,9 @@
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .shop-item__check--on {
