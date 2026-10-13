@@ -88,18 +88,20 @@ export default function Personal() {
 
   // Solo lo de esta persona (origen = usuario) y visible en el mes.
   const myIncomes = incomes
-    .filter((inc) => inc.memberEmail === email && isVisibleInMonth(inc, monthKey))
+    .filter((inc) => isVisibleInMonth(inc, monthKey))
     .map((inc) => {
       const o = applyMonthOverride(inc, monthKey)
       return { ...o, isReceived: inc.fixed ? !!(inc.receivedMonths || {})[monthKey] : !!inc.received }
     })
+    .filter((inc) => inc.memberEmail === email)
 
   const myExpenses = expenses
-    .filter((exp) => exp.memberEmail === email && isVisibleInMonth(exp, monthKey))
+    .filter((exp) => isVisibleInMonth(exp, monthKey))
     .map((exp) => {
       const o = applyMonthOverride(exp, monthKey)
       return { ...o, isPaid: exp.fixed ? !!(exp.paidMonths || {})[monthKey] : !!exp.paid }
     })
+    .filter((inc) => inc.memberEmail === email)
 
   // Ordena una lista de gastos según el criterio seleccionado (se reutiliza dentro de cada grupo).
   const sortExpensesBy = (arr) =>
